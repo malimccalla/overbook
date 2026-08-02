@@ -1,0 +1,12 @@
+packages:
+  - 'packages/api'
+  - 'packages/www'
+  - 'packages/agents'
+allowBuilds:
+  '@apollo/protobufjs': false
+  '@google/genai': false
+  esbuild: false
+  protobufjs: false
+  sharp: false
+  sqlite3: false
+  unrs-resolver: false
