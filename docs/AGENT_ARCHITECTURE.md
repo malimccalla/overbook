@@ -1,4 +1,4 @@
-# Korda V1 — Agent Architecture
+# Overbook V1 — Agent Architecture
 
 ## Workflow choice: ADK Graph-based Workflow
 
@@ -15,12 +15,12 @@ ADK 2.0 (Python v2.0.0+) introduces **graph-based workflows** using the `Workflo
 
 ## System overview
 
-Three workflows cover the full Korda V1 lifecycle:
+Three workflows cover the full Overbook V1 lifecycle:
 
 | # | Workflow | Pattern | Trigger |
 |---|---|---|---|
-| 1 | `korda_inbound_workflow` | Graph-based `Workflow` | New inbound email arrives |
-| 2 | `korda_queue_action_workflow` | Graph-based `Workflow` | Agent takes action on a queue item |
+| 1 | `overbook_inbound_workflow` | Graph-based `Workflow` | New inbound email arrives |
+| 2 | `overbook_queue_action_workflow` | Graph-based `Workflow` | Agent takes action on a queue item |
 | 3 | `booking_coordinator` | Collaborative `Agent` (coordinator) | Agent opens an active booking |
 
 ---
@@ -106,8 +106,8 @@ from google.adk.workflow import JoinNode
 
 enrichment_join = JoinNode(name="enrichment_join")
 
-korda_inbound_workflow = Workflow(
-    name="korda_inbound_workflow",
+overbook_inbound_workflow = Workflow(
+    name="overbook_inbound_workflow",
     edges=[
         ("START", email_classifier_agent, classify_router),
         (classify_router, {
@@ -128,8 +128,8 @@ korda_inbound_workflow = Workflow(
 ### Workflow 2: Queue action
 
 ```python
-korda_queue_action_workflow = Workflow(
-    name="korda_queue_action_workflow",
+overbook_queue_action_workflow = Workflow(
+    name="overbook_queue_action_workflow",
     edges=[
         ("START", validate_action_fn, action_router),
         (action_router, {
@@ -374,8 +374,8 @@ CAPTURED → AWAITING_REPLY → IN_NEGOTIATION → PENCILLED
 
 2. **`JoinNode` failsafe** — each of the three parallel enrichment agents must always emit `Event(output=...)`, even on error, or the `JoinNode` will stall. Wrap extraction logic with a try/except that returns a safe default.
 
-3. **`draft_reply_agent` mode** — use `mode="single_turn"` when it is a direct node in `korda_queue_action_workflow`; use `mode="task"` only when it is a sub-agent of `booking_coordinator`. The same agent definition can be reused in both contexts — the runtime determines control flow from how it was invoked.
+3. **`draft_reply_agent` mode** — use `mode="single_turn"` when it is a direct node in `overbook_queue_action_workflow`; use `mode="task"` only when it is a sub-agent of `booking_coordinator`. The same agent definition can be reused in both contexts — the runtime determines control flow from how it was invoked.
 
 4. **Human-in-the-loop** — ADK 2.0 supports pausing a graph at a `HumanInputNode` (`adk.dev/graphs/human-input/`). The queue review step in W2 is a candidate for this rather than terminating W1 and starting W2 as a separate invocation.
 
-5. **`adk web` entrypoint** — expose `korda_inbound_workflow`, `korda_queue_action_workflow`, and `booking_coordinator` as top-level agents so they all appear in the ADK web UI.
+5. **`adk web` entrypoint** — expose `overbook_inbound_workflow`, `overbook_queue_action_workflow`, and `booking_coordinator` as top-level agents so they all appear in the ADK web UI.
