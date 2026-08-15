@@ -3,12 +3,10 @@ import path from "node:path";
 
 const nextConfig: NextConfig = {
   turbopack: {
-    root: path.join(__dirname, "../.."),
+    // Stops Turbopack walking up to ~/Documents/Programming/yarn.lock
+    root: path.resolve(__dirname, "../.."),
   },
   allowedDevOrigins: ["overbook.test", "*.overbook.test", "localhost"],
-  experimental: {
-    turbopackFileSystemCacheForDev: true,
-  },
 };
 
 export default nextConfig;

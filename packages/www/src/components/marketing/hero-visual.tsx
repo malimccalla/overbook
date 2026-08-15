@@ -18,15 +18,14 @@ export function HeroVisual() {
 
       {/* Sharp geometric overlays */}
       <div className="absolute left-[8%] top-[35%] h-16 w-48 border border-paper/20" />
-      <div className="absolute right-[10%] bottom-[25%] h-24 w-24 border border-paper/20 rotate-12" />
-      <div className="absolute left-[50%] top-[15%] h-12 w-64 border border-paper/15 -translate-x-1/2" />
+      <div className="absolute right-[10%] bottom-[25%] h-24 w-24 rotate-12 border border-paper/20" />
+      <div className="absolute left-[50%] top-[15%] h-12 w-64 -translate-x-1/2 border border-paper/15" />
 
       {/* Connecting lines suggesting data flow */}
       <svg className="absolute inset-0 h-full w-full" xmlns="http://www.w3.org/2000/svg">
         <line x1="15%" y1="50%" x2="40%" y2="35%" stroke="rgba(243,241,234,0.12)" strokeWidth="1" />
         <line x1="40%" y1="35%" x2="65%" y2="55%" stroke="rgba(243,241,234,0.12)" strokeWidth="1" />
         <line x1="65%" y1="55%" x2="85%" y2="40%" stroke="rgba(243,241,234,0.12)" strokeWidth="1" />
-        {/* Nodes */}
         <circle cx="15%" cy="50%" r="4" fill="#ee4d2d" />
         <circle cx="40%" cy="35%" r="4" fill="#a8e5e1" />
         <circle cx="65%" cy="55%" r="4" fill="#d7f257" />
