@@ -11,21 +11,21 @@ export function DemoForm() {
         e.preventDefault();
         // TODO: submit to API
       }}
-      className="flex w-full max-w-lg items-center overflow-hidden rounded-full border border-ink/15 bg-white shadow-sm"
+      className="flex w-full max-w-lg items-center gap-2"
     >
       <input
         type="email"
         required
-        placeholder="you@agency.com"
+        placeholder="Enter your email..."
         value={email}
         onChange={(e) => setEmail(e.target.value)}
-        className="flex-1 bg-transparent px-5 py-3 text-sm text-ink placeholder:text-muted focus:outline-none"
+        className="flex-1 rounded-lg border border-ink/15 bg-white px-5 py-3 text-base text-ink shadow-sm placeholder:text-muted focus:outline-none"
       />
       <button
         type="submit"
-        className="mr-1.5 rounded-full bg-ink px-5 py-2.5 text-sm font-medium text-paper transition-colors hover:bg-ink/80"
+        className="rounded-lg bg-ink px-6 py-3 text-base font-medium text-paper shadow-sm transition-colors hover:bg-ink/80"
       >
-        Request demo
+        Request Demo
       </button>
     </form>
   );
