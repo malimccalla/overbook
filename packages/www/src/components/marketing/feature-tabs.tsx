@@ -197,47 +197,43 @@ const bookingRows = [
 
 function BookingsPreview() {
   const rows = [
-    { artist: "Dan Shake", flag: null, promoter: "Fabric · London", date: "14 Sep", fee: "£2,500" },
-    { artist: "TENNIN", flag: "missing fields", promoter: "Trouw · Amsterdam", date: "22 Sep", fee: "€1,800", selected: true },
-    { artist: "OUO", flag: null, promoter: "Boiler Room · Berlin", date: "5 Oct", fee: "£3,200" },
-    { artist: "Eli Verano", flag: "missing fields", promoter: "XOYO · London", date: "TBC", fee: "£1,400" },
+    { artist: "Dan Shake", promoter: "Fabric · London", date: "14 Sep", fee: "£2,500", conflict: true, signal: "Conflict", sc: "bg-red-50 text-red-600" },
+    { artist: "TENNIN", promoter: "Trouw · Amsterdam", date: "22 Sep", fee: "€1,800", selected: true, signal: "Incomplete", sc: "bg-amber-50 text-amber-700" },
+    { artist: "OUO", promoter: "Boiler Room · Berlin", date: "5 Oct", fee: "£3,200", signal: "Strong offer", sc: "bg-emerald-50 text-emerald-700" },
+    { artist: "Eli Verano", promoter: "XOYO · London", date: "TBC", fee: "£1,400", signal: "Incomplete", sc: "bg-amber-50 text-amber-700" },
   ];
 
   return (
     <div className="bg-[#f8f7f4] text-[11px]">
       <div className="flex items-center justify-between border-b border-ink/8 px-5 py-3">
-        <div>
-          <span className="text-sm font-semibold text-ink">Booking Requests</span>
-          <span className="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-medium text-amber-700">4 need review</span>
-        </div>
+        <span className="text-sm font-semibold text-ink">Booking Requests</span>
         <div className="flex gap-2">
           <div className="rounded-md border border-ink/12 px-2.5 py-1 text-ink/60">Filter</div>
           <div className="rounded-md border border-ink/12 px-2.5 py-1 text-ink/60">All artists</div>
         </div>
       </div>
-      <div className="grid grid-cols-[16px_1.4fr_1fr_0.7fr_0.7fr_80px] border-b border-[#121212]/8 px-5 py-2 text-[10px] font-medium uppercase tracking-wide text-ink/35">
-        <span /><span>Artist</span><span>Promoter / Venue</span><span>Date</span><span>Fee</span><span>Status</span>
+      <div className="grid grid-cols-[16px_1.4fr_1fr_0.7fr_0.7fr_90px] border-b border-[#121212]/8 px-5 py-2 text-[10px] font-medium uppercase tracking-wide text-ink/35">
+        <span /><span>Artist</span><span>Promoter / Venue</span><span>Date</span><span>Fee</span><span>Signal</span>
       </div>
       {rows.map((r) => (
         <div key={r.artist + r.date}>
-          <div className={`grid grid-cols-[16px_1.4fr_1fr_0.7fr_0.7fr_80px] items-center border-b px-5 py-2.5 ${
-            r.selected ? "border-[#ee4d2d]/15 bg-[#f3f1ea]" : "border-gray-50"
+          <div className={`grid grid-cols-[16px_1.4fr_1fr_0.7fr_0.7fr_90px] items-center border-b px-5 py-2.5 ${
+            (r as { selected?: boolean }).selected ? "border-[#ee4d2d]/15 bg-[#f3f1ea]" : "border-gray-50"
           }`}>
             <span className="text-[9px] text-ink/25">{(r as { selected?: boolean }).selected ? "▾" : "▸"}</span>
-            <div className="flex items-center gap-2">
-              <span className="font-medium text-ink">{r.artist}</span>
-              {r.flag && <span className="rounded bg-amber-50 px-1 py-0.5 text-[9px] font-medium text-amber-600">{r.flag}</span>}
-            </div>
+            <span className="font-medium text-ink">{r.artist}</span>
             <span className="text-ink/60">{r.promoter}</span>
-            <span className={r.date === "TBC" ? "italic text-amber-500" : "text-ink/60"}>{r.date}</span>
+            <div className="flex items-center gap-1.5">
+              <span className={r.date === "TBC" ? "italic text-amber-500" : "text-ink/60"}>{r.date}</span>
+            </div>
             <span className="font-medium text-ink">{r.fee}</span>
-            <span className="inline-flex w-fit rounded bg-amber-50 px-2 py-0.5 font-mono text-[9px] font-medium uppercase text-amber-700">Review</span>
+            <span className={`inline-flex w-fit rounded px-2 py-0.5 font-mono text-[9px] font-medium ${r.sc}`}>{r.signal}</span>
           </div>
           {(r as { selected?: boolean }).selected && (
             <div className="border-b border-ink/8 bg-[#f3f1ea] px-5 py-3">
               {/* Actions */}
               <div className="mb-3 flex items-center justify-between">
-                <span className="font-semibold text-ink">TENNIN — Trouw, Amsterdam · 22 Sep 2025</span>
+                <span className="font-semibold text-ink">TENNIN — Trouw, Amsterdam · 22 Sep</span>
                 <div className="flex gap-1.5">
                   <div className="rounded-md bg-white px-2 py-1 text-[10px] font-medium text-gray-700 ring-1 ring-ink/15">View on calendar</div>
                   <div className="rounded-md bg-white px-2 py-1 text-[10px] font-medium text-gray-700 ring-1 ring-ink/15">Request info</div>
@@ -245,7 +241,6 @@ function BookingsPreview() {
                   <div className="rounded-md bg-[#ee4d2d] px-2 py-1 text-[10px] font-medium text-white">Create booking →</div>
                 </div>
               </div>
-              {/* Primary info — artist, date, venue, fee */}
               <div className="mb-2 grid grid-cols-4 gap-2">
                 <div className="rounded bg-white p-2.5 ring-1 ring-ink/8">
                   <div className="mb-1.5 flex items-center gap-1.5">
