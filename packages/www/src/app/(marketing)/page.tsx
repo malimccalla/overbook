@@ -1,6 +1,7 @@
 import { DemoForm } from "@/components/marketing/demo-form";
 import { FeatureTabs } from "@/components/marketing/feature-tabs";
 import { HeroVisual } from "@/components/marketing/hero-visual";
+import { ProcessSection } from "@/components/marketing/process-section";
 
 export default function HomePage() {
   return (
@@ -24,6 +25,8 @@ export default function HomePage() {
       <HeroVisual />
 
       <FeatureTabs />
+
+      <ProcessSection />
     </div>
   );
 }
