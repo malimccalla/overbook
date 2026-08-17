@@ -6,6 +6,8 @@ import { expressMiddleware } from '@as-integrations/express5';
 import cors from 'cors';
 import express from 'express';
 
+import { clerkWebhookHandler } from './webhooks/clerk.js';
+
 const typeDefs = `#graphql
   type Query {
     health: String
@@ -20,6 +22,9 @@ const resolvers = {
 
 const app = express();
 const httpServer = http.createServer(app);
+
+// Webhook route needs raw body for signature verification
+app.post('/webhooks/clerk', express.raw({ type: 'application/json' }), clerkWebhookHandler);
 
 const server = new ApolloServer({
   typeDefs,

@@ -1,10 +1,15 @@
 export default function RosterPage() {
   return (
-    <div>
-      <h1 className="text-2xl font-semibold tracking-tight">Roster</h1>
-      <p className="mt-2 text-zinc-600 dark:text-zinc-400">
-        Your artists and their availability.
-      </p>
+    <div className="p-8">
+      <div className="flex items-center justify-between">
+        <h1 className="text-lg font-semibold text-zinc-900">Roster</h1>
+      </div>
+      <div className="mt-8 flex flex-col items-center justify-center rounded-lg border border-dashed border-zinc-200 py-16">
+        <p className="text-sm text-zinc-500">No artists on roster yet</p>
+        <p className="mt-1 text-xs text-zinc-400">
+          Add artists to manage their bookings
+        </p>
+      </div>
     </div>
   );
 }

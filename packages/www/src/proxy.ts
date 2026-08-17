@@ -1,49 +1,54 @@
-import { type NextRequest, NextResponse } from "next/server";
+import { clerkMiddleware } from '@clerk/nextjs/server';
+import { type NextRequest, NextResponse } from 'next/server';
 
-const RESERVED_SUBDOMAINS = new Set(["app", "admin", "www"]);
+const RESERVED_SUBDOMAINS = new Set(['app', 'admin', 'www']);
+const PUBLIC_PATHS = new Set(['/sign-in', '/sign-up']);
 
-export default function proxy(request: NextRequest) {
-  const hostname = (request.headers.get("host") || "").split(":")[0];
-  const parts = hostname.split(".");
+function isPublicPath(pathname: string) {
+  return PUBLIC_PATHS.has(pathname) || pathname.startsWith('/sign-in') || pathname.startsWith('/sign-up');
+}
+
+function subdomainRouter(request: NextRequest) {
+  const hostname = (request.headers.get('host') || '').split(':')[0];
+  const parts = hostname.split('.');
   const pathname = request.nextUrl.pathname;
 
-  // Skip static assets
   if (
-    pathname.startsWith("/_next/") ||
-    pathname.startsWith("/favicon") ||
-    pathname.endsWith(".ico")
+    pathname.startsWith('/_next/') ||
+    pathname.startsWith('/favicon') ||
+    pathname.endsWith('.ico')
   ) {
     return NextResponse.next();
   }
 
-  // Determine subdomain (works for overbook.test, overbook.io, localhost)
   let subdomain: string | null = null;
-  if (hostname === "localhost" || parts.length <= 2) {
+  if (hostname === 'localhost' || parts.length <= 2) {
     subdomain = null;
   } else {
     subdomain = parts[0];
   }
 
-  // Root domain → (marketing), no rewrite needed
-  if (!subdomain || subdomain === "www") {
+  if (!subdomain || subdomain === 'www') {
     return NextResponse.next();
   }
 
-  // app.overbook.* → (dashboard)/dashboard/*
-  if (subdomain === "app") {
+  // Auth routes are shared across all subdomains
+  if (isPublicPath(pathname)) {
+    return NextResponse.next();
+  }
+
+  if (subdomain === 'app') {
     return NextResponse.rewrite(
       new URL(`/dashboard${pathname}${request.nextUrl.search}`, request.url),
     );
   }
 
-  // admin.overbook.* → (admin)/admin/*
-  if (subdomain === "admin") {
+  if (subdomain === 'admin') {
     return NextResponse.rewrite(
       new URL(`/admin${pathname}${request.nextUrl.search}`, request.url),
     );
   }
 
-  // [tenant].overbook.* → (tenant)/[slug]/*
   if (!RESERVED_SUBDOMAINS.has(subdomain)) {
     const newUrl = new URL(`/${subdomain}${pathname}`, request.url);
     newUrl.search = request.nextUrl.search;
@@ -53,8 +58,24 @@ export default function proxy(request: NextRequest) {
   return NextResponse.next();
 }
 
+export default clerkMiddleware(async (auth, request) => {
+  const pathname = request.nextUrl.pathname;
+  const hostname = (request.headers.get('host') || '').split(':')[0];
+  const parts = hostname.split('.');
+  const subdomain = parts.length > 2 ? parts[0] : null;
+
+  // Protect app and admin subdomains (but not auth pages or marketing)
+  const isAppRoute = subdomain === 'app' || subdomain === 'admin';
+  if (isAppRoute && !isPublicPath(pathname)) {
+    await auth.protect();
+  }
+
+  return subdomainRouter(request);
+});
+
 export const config = {
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml).*)",
+    '/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml).*)',
+    '/__clerk/:path*',
   ],
 };
