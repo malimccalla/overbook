@@ -166,6 +166,29 @@ export function FeatureTabs() {
                 </li>
               ))}
             </ul>
+            {(active.id === "bookings" || active.id === "scheduling") && (
+              <div className="mt-8 border-t border-ink/10 pt-6">
+                <p className="mb-3 font-mono text-[0.65rem] uppercase text-muted">Integrates with</p>
+                <div className="flex items-center gap-4">
+                  {active.id === "bookings" && (
+                    <>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src="/icons/Gmail.svg" alt="Gmail" width={24} height={24} />
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src="/icons/Microsoft-Outlook.svg" alt="Microsoft Outlook" width={24} height={24} />
+                    </>
+                  )}
+                  {active.id === "scheduling" && (
+                    <>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src="/icons/Google_Calendar_icon_(2020).svg" alt="Google Calendar" width={24} height={24} />
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src="/icons/Microsoft-Outlook.svg" alt="Microsoft Outlook" width={24} height={24} />
+                    </>
+                  )}
+                </div>
+              </div>
+            )}
             </div>
 
           {/* Tab preview mockup */}
@@ -300,7 +323,7 @@ function TabPreview({ tab }: { tab: string }) {
 
     case "scheduling":
       return (
-        <div className="min-h-[340px] bg-[#f8f7f4] text-[11px]">
+        <div className="min-h-[420px] bg-[#f8f7f4] text-[11px]">
           <div className="flex items-center justify-between border-b border-ink/8 px-5 py-3">
             <div>
               <span className="text-sm font-semibold text-ink">Week view</span>
@@ -308,51 +331,71 @@ function TabPreview({ tab }: { tab: string }) {
             </div>
             <div className="flex gap-2">
               <div className="rounded border border-ink/12 px-2.5 py-1 text-ink/60">← Prev</div>
-              <div className="rounded border border-ink/12 bg-[#f3f1ea] px-2.5 py-1 font-medium text-gray-700">All artists</div>
               <div className="rounded border border-ink/12 px-2.5 py-1 text-ink/60">Next →</div>
             </div>
           </div>
-          {/* Week grid — Google Calendar style with multi-hour spans */}
           <div className="flex">
-            {/* Time gutter */}
-            <div className="w-12 shrink-0 pt-7">
-              {["18", "20", "22", "00", "02", "04"].map(h => (
-                <div key={h} className="flex h-10 items-start justify-end pr-2 text-[9px] text-ink/30">{h}:00</div>
-              ))}
-            </div>
-            {/* Day columns */}
-            <div className="flex flex-1 gap-px overflow-hidden">
+            {/* Artist sidebar — Google Calendar style */}
+            <div className="w-32 shrink-0 border-r border-ink/8 px-3 py-3">
+              <div className="mb-2 font-mono text-[8px] uppercase text-ink/30">Roster</div>
               {[
-                { d: "Mon", events: [] },
-                { d: "Tue", events: [] },
-                { d: "Wed", events: [{ top: 1, h: 2, a: "OUO", v: "Fabric", c: "#a8e5e1" }] },
-                { d: "Thu", events: [{ top: 0, h: 1, a: "Gensai", v: "Trouw", c: "#d7f257" }] },
-                { d: "Fri", events: [{ top: 1, h: 3, a: "Dan Shake", v: "Fabric", c: "#ee4d2d" }, { top: 2, h: 2, a: "TENNIN", v: "XOYO", c: "#a8e5e1" }] },
-                { d: "Sat", events: [{ top: 1, h: 3, a: "Eli Verano", v: "Berghain", c: "#d7f257" }, { top: 2, h: 4, a: "From:Ksusha", v: "De School", c: "#ee4d2d" }, { top: 3, h: 2, a: "Gensai", v: "WHP", c: "#a8e5e1" }] },
-                { d: "Sun", events: [{ top: 0, h: 2, a: "OUO", v: "Corsica", c: "#d7f257" }] },
-              ].map(({ d, events }) => (
-                <div key={d} className="flex-1 min-w-0">
-                  <div className={`py-1.5 text-center text-[9px] font-medium uppercase ${
-                    d === "Fri" || d === "Sat" ? "font-bold text-ink" : "text-ink/40"
-                  }`}>{d}</div>
-                  {/* 6 rows × 40px = 240px */}
-                  <div className="relative" style={{ height: 240 }}>
-                    {[0,1,2,3,4,5].map(i => (
-                      <div key={i} className="absolute w-full border-t border-ink/5" style={{ top: i * 40 }} />
-                    ))}
-                    {events.map((ev, ei) => (
-                      <div
-                        key={ei}
-                        className="absolute inset-x-0.5 overflow-hidden rounded px-1 py-0.5"
-                        style={{ top: ev.top * 40 + 2, height: ev.h * 40 - 4, backgroundColor: ev.c + "33", borderLeft: `2px solid ${ev.c}` }}
-                      >
-                        <div className="truncate text-[8px] font-semibold leading-tight" style={{ color: ev.c === "#ee4d2d" ? "#c43d20" : ev.c === "#a8e5e1" ? "#2a7a75" : "#5a6200" }}>{ev.a}</div>
-                        <div className="truncate text-[7px] opacity-70" style={{ color: ev.c === "#ee4d2d" ? "#c43d20" : ev.c === "#a8e5e1" ? "#2a7a75" : "#5a6200" }}>{ev.v}</div>
-                      </div>
-                    ))}
-                  </div>
+                { name: "Dan Shake", c: "#ee4d2d", on: true },
+                { name: "TENNIN", c: "#a8e5e1", on: true },
+                { name: "OUO", c: "#d7f257", on: true },
+                { name: "Gensai", c: "#a8e5e1", on: true },
+                { name: "Eli Verano", c: "#d7f257", on: true },
+                { name: "From:Ksusha", c: "#ee4d2d", on: false },
+              ].map(a => (
+                <div key={a.name} className="flex items-center gap-2 py-1">
+                  <span
+                    className="h-2.5 w-2.5 shrink-0 rounded-sm"
+                    style={{ backgroundColor: a.on ? a.c : "transparent", border: `1.5px solid ${a.c}`, opacity: a.on ? 1 : 0.4 }}
+                  />
+                  <span className={`truncate text-[9px] ${a.on ? "text-ink/70" : "text-ink/30"}`}>{a.name}</span>
                 </div>
               ))}
+            </div>
+            {/* Calendar */}
+            <div className="flex flex-1 overflow-hidden">
+              {/* Time gutter */}
+              <div className="w-8 shrink-0 pt-7">
+                {["18", "20", "22", "00", "02", "04"].map(h => (
+                  <div key={h} className="flex h-10 items-start justify-end pr-1 text-[8px] text-ink/25">{h}</div>
+                ))}
+              </div>
+              {/* Day columns */}
+              <div className="flex flex-1 gap-px overflow-hidden">
+                {[
+                  { d: "Mon", events: [] },
+                  { d: "Tue", events: [] },
+                  { d: "Wed", events: [{ top: 1, h: 2, a: "OUO", v: "Fabric", c: "#a8e5e1" }] },
+                  { d: "Thu", events: [{ top: 0, h: 1, a: "Gensai", v: "Trouw", c: "#d7f257" }] },
+                  { d: "Fri", events: [{ top: 1, h: 3, a: "Dan Shake", v: "Fabric", c: "#ee4d2d" }, { top: 2, h: 2, a: "TENNIN", v: "XOYO", c: "#a8e5e1" }] },
+                  { d: "Sat", events: [{ top: 1, h: 3, a: "Eli Verano", v: "Berghain", c: "#d7f257" }, { top: 2, h: 4, a: "From:Ksusha", v: "De School", c: "#ee4d2d" }, { top: 3, h: 2, a: "Gensai", v: "WHP", c: "#a8e5e1" }] },
+                  { d: "Sun", events: [{ top: 0, h: 2, a: "OUO", v: "Corsica", c: "#d7f257" }] },
+                ].map(({ d, events }) => (
+                  <div key={d} className="flex-1 min-w-0">
+                    <div className={`py-1.5 text-center text-[8px] font-medium uppercase ${
+                      d === "Fri" || d === "Sat" ? "font-bold text-ink" : "text-ink/40"
+                    }`}>{d}</div>
+                    <div className="relative" style={{ height: 240 }}>
+                      {[0,1,2,3,4,5].map(i => (
+                        <div key={i} className="absolute w-full border-t border-ink/5" style={{ top: i * 40 }} />
+                      ))}
+                      {events.map((ev, ei) => (
+                        <div
+                          key={ei}
+                          className="absolute inset-x-0.5 overflow-hidden rounded px-1 py-0.5"
+                          style={{ top: ev.top * 40 + 2, height: ev.h * 40 - 4, backgroundColor: ev.c + "33", borderLeft: `2px solid ${ev.c}` }}
+                        >
+                          <div className="truncate text-[7px] font-semibold leading-tight" style={{ color: ev.c === "#ee4d2d" ? "#c43d20" : ev.c === "#a8e5e1" ? "#2a7a75" : "#5a6200" }}>{ev.a}</div>
+                          <div className="truncate text-[6px] opacity-70" style={{ color: ev.c === "#ee4d2d" ? "#c43d20" : ev.c === "#a8e5e1" ? "#2a7a75" : "#5a6200" }}>{ev.v}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </div>
