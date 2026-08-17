@@ -9,11 +9,11 @@ datasource db {
 
 model Organization {
   id         String   @id @default(cuid())
-  clerkOrgId String?  @unique
+  clerkOrgId String?  @unique @map("clerk_org_id")
   name       String
   slug       String   @unique
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
 
   memberships      Membership[]
   connectedInboxes ConnectedInbox[]
@@ -21,6 +21,8 @@ model Organization {
   rawEmails        RawEmail[]
   bookingRequests  BookingRequest[]
   bookings         Booking[]
+
+  @@map("organizations")
 }
 
 enum MemberRole {
@@ -28,89 +30,100 @@ enum MemberRole {
   ADMIN
   AGENT
   ASSISTANT
+
+  @@map("member_role")
 }
 
 model User {
   id        String   @id @default(cuid())
-  clerkId   String   @unique
+  clerkId   String   @unique @map("clerk_id")
   email     String   @unique
   name      String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   memberships        Membership[]
   connectedInboxes   ConnectedInbox[]
   artistsRepresented Artist[]         @relation("AgentArtists")
   forwardedRequests  BookingRequest[] @relation("ForwardedRequests")
   assignedRequests   BookingRequest[] @relation("AssignedRequests")
+
+  @@map("users")
 }
 
 model Membership {
   id             String     @id @default(cuid())
   role           MemberRole @default(AGENT)
-  organizationId String
-  userId         String
-  createdAt      DateTime   @default(now())
+  organizationId String     @map("organization_id")
+  userId         String     @map("user_id")
+  createdAt      DateTime   @default(now()) @map("created_at")
 
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([organizationId, userId])
+  @@map("memberships")
 }
 
 model Artist {
   id              String   @id @default(cuid())
-  organizationId  String
-  agentId         String?
+  organizationId  String   @map("organization_id")
+  agentId         String?  @map("agent_id")
   name            String
-  stageName       String?
+  aliases         String[]
   genres          String[]
   notes           String?
-  nylasCalendarId String?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  nylasCalendarId String?  @map("nylas_calendar_id")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
 
   organization    Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   agent           User?            @relation("AgentArtists", fields: [agentId], references: [id])
   bookingRequests BookingRequest[]
   bookings        Booking[]
+
+  @@index([organizationId])
+  @@map("artists")
 }
 
-// V1: inbox connected via Nylas OAuth
 model ConnectedInbox {
   id             String   @id @default(cuid())
-  organizationId String
+  organizationId String   @map("organization_id")
   email          String
-  displayName    String?
-  userId         String?
-  nylasGrantId   String?  @unique
-  createdAt      DateTime @default(now())
+  displayName    String?  @map("display_name")
+  userId         String?  @map("user_id")
+  nylasGrantId   String?  @unique @map("nylas_grant_id")
+  createdAt      DateTime @default(now()) @map("created_at")
 
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   user         User?        @relation(fields: [userId], references: [id])
   rawEmails    RawEmail[]
 
   @@unique([organizationId, email])
+  @@map("connected_inboxes")
 }
 
-// Immutable — never edited after creation
 model RawEmail {
   id               String   @id @default(cuid())
-  organizationId   String
-  connectedInboxId String
-  nylasMessageId   String   @unique
+  organizationId   String   @map("organization_id")
+  connectedInboxId String   @map("connected_inbox_id")
+  nylasMessageId   String   @unique @map("nylas_message_id")
   subject          String?
-  bodyText         String   @db.Text
-  bodyHtml         String?  @db.Text
-  fromEmail        String?
-  fromName         String?
-  receivedAt       DateTime
-  hasAttachments   Boolean  @default(false)
-  createdAt        DateTime @default(now())
+  bodyText         String   @db.Text @map("body_text")
+  bodyHtml         String?  @db.Text @map("body_html")
+  fromEmail        String?  @map("from_email")
+  fromName         String?  @map("from_name")
+  receivedAt       DateTime @map("received_at")
+  hasAttachments   Boolean  @default(false) @map("has_attachments")
+  createdAt        DateTime @default(now()) @map("created_at")
 
   organization   Organization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   connectedInbox ConnectedInbox  @relation(fields: [connectedInboxId], references: [id])
   bookingRequest BookingRequest?
+
+  @@index([organizationId])
+  @@index([connectedInboxId])
+  @@map("raw_emails")
 }
 
 enum BookingRequestStatus {
@@ -118,49 +131,48 @@ enum BookingRequestStatus {
   DISMISSED
   INFO_REQUESTED
   CAPTURED
+
+  @@map("booking_request_status")
 }
 
-// AI-authored — same fields mean different things once promoted to Booking
 model BookingRequest {
   id             String               @id @default(cuid())
-  organizationId String
-  artistId       String?
-  rawEmailId     String?              @unique
-  forwardedById  String?
-  assignedToId   String?
+  organizationId String               @map("organization_id")
+  artistId       String?              @map("artist_id")
+  rawEmailId     String?              @unique @map("raw_email_id")
+  forwardedById  String?              @map("forwarded_by_id")
+  assignedToId   String?              @map("assigned_to_id")
 
   promoter        String?
-  promoterEmail   String?
+  promoterEmail   String?  @map("promoter_email")
   venue           String?
   city            String?
   country         String?
-  proposedDate    DateTime?
-  proposedDateRaw String?
+  proposedDate    DateTime? @map("proposed_date")
+  proposedDateRaw String?   @map("proposed_date_raw")
 
-  // Fees in smallest currency unit (Stripe convention: 300000 = €3,000)
-  feeAmount      Int?
-  feeMin         Int?
-  feeMax         Int?
-  feeIsRange     Boolean  @default(false)
-  currencyCode   String?
-  currencySymbol String?
-  rawFee         String?
+  feeAmount      Int?     @map("fee_amount")
+  feeMin         Int?     @map("fee_min")
+  feeMax         Int?     @map("fee_max")
+  feeIsRange     Boolean  @default(false) @map("fee_is_range")
+  currencyCode   String?  @map("currency_code")
+  currencySymbol String?  @map("currency_symbol")
+  rawFee         String?  @map("raw_fee")
 
-  agencyFeeOnTop Boolean?
+  agencyFeeOnTop Boolean? @map("agency_fee_on_top")
 
-  // Flexible offer fields: { event, commercial, logistics, promoterContact }
   details Json?
 
   status                BookingRequestStatus @default(NEEDS_REVIEW)
   confidence            Float?
-  missingFields         String[]
-  conflictFlags         String[]
+  missingFields         String[]             @map("missing_fields")
+  conflictFlags         String[]             @map("conflict_flags")
   summary               String?
   notes                 String?
-  recommendedNextAction String?
+  recommendedNextAction String?              @map("recommended_next_action")
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   artist       Artist?      @relation(fields: [artistId], references: [id])
@@ -168,6 +180,11 @@ model BookingRequest {
   forwardedBy  User?        @relation("ForwardedRequests", fields: [forwardedById], references: [id])
   assignedTo   User?        @relation("AssignedRequests", fields: [assignedToId], references: [id])
   booking      Booking?
+
+  @@index([organizationId])
+  @@index([artistId])
+  @@index([status])
+  @@map("booking_requests")
 }
 
 enum BookingStatus {
@@ -181,31 +198,37 @@ enum BookingStatus {
   CONTRACT_RECEIVED
   CONFIRMED
   LOST
+
+  @@map("booking_status")
 }
 
-// Human-confirmed — same fee fields as BookingRequest but trusted data
 model Booking {
   id               String        @id @default(cuid())
-  organizationId   String
-  artistId         String
-  bookingRequestId String        @unique
+  organizationId   String        @map("organization_id")
+  artistId         String        @map("artist_id")
+  bookingRequestId String        @unique @map("booking_request_id")
 
   promoter       String?
   venue          String?
   city           String?
   country        String?
   date           DateTime?
-  feeAmount      Int?
-  currencyCode   String?
-  currencySymbol String?
-  agencyFeeOnTop Boolean?
+  feeAmount      Int?          @map("fee_amount")
+  currencyCode   String?       @map("currency_code")
+  currencySymbol String?       @map("currency_symbol")
+  agencyFeeOnTop Boolean?      @map("agency_fee_on_top")
   status         BookingStatus @default(CAPTURED)
   notes          String?
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   organization   Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   artist         Artist         @relation(fields: [artistId], references: [id])
   bookingRequest BookingRequest @relation(fields: [bookingRequestId], references: [id])
+
+  @@index([organizationId])
+  @@index([artistId])
+  @@index([status])
+  @@map("bookings")
 }

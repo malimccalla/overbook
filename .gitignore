@@ -1,3 +1,10 @@
 docs/
 .env
 node_modules
+
+# Prisma
+packages/db/generated/
+packages/db/.env
+
+# pnpm
+.pnpm-store/
