@@ -1,0 +1,211 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Organization {
+  id         String   @id @default(cuid())
+  clerkOrgId String?  @unique
+  name       String
+  slug       String   @unique
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  memberships      Membership[]
+  connectedInboxes ConnectedInbox[]
+  artists          Artist[]
+  rawEmails        RawEmail[]
+  bookingRequests  BookingRequest[]
+  bookings         Booking[]
+}
+
+enum MemberRole {
+  OWNER
+  ADMIN
+  AGENT
+  ASSISTANT
+}
+
+model User {
+  id        String   @id @default(cuid())
+  clerkId   String   @unique
+  email     String   @unique
+  name      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  memberships        Membership[]
+  connectedInboxes   ConnectedInbox[]
+  artistsRepresented Artist[]         @relation("AgentArtists")
+  forwardedRequests  BookingRequest[] @relation("ForwardedRequests")
+  assignedRequests   BookingRequest[] @relation("AssignedRequests")
+}
+
+model Membership {
+  id             String     @id @default(cuid())
+  role           MemberRole @default(AGENT)
+  organizationId String
+  userId         String
+  createdAt      DateTime   @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, userId])
+}
+
+model Artist {
+  id              String   @id @default(cuid())
+  organizationId  String
+  agentId         String?
+  name            String
+  stageName       String?
+  genres          String[]
+  notes           String?
+  nylasCalendarId String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  organization    Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  agent           User?            @relation("AgentArtists", fields: [agentId], references: [id])
+  bookingRequests BookingRequest[]
+  bookings        Booking[]
+}
+
+// V1: inbox connected via Nylas OAuth
+model ConnectedInbox {
+  id             String   @id @default(cuid())
+  organizationId String
+  email          String
+  displayName    String?
+  userId         String?
+  nylasGrantId   String?  @unique
+  createdAt      DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user         User?        @relation(fields: [userId], references: [id])
+  rawEmails    RawEmail[]
+
+  @@unique([organizationId, email])
+}
+
+// Immutable — never edited after creation
+model RawEmail {
+  id               String   @id @default(cuid())
+  organizationId   String
+  connectedInboxId String
+  nylasMessageId   String   @unique
+  subject          String?
+  bodyText         String   @db.Text
+  bodyHtml         String?  @db.Text
+  fromEmail        String?
+  fromName         String?
+  receivedAt       DateTime
+  hasAttachments   Boolean  @default(false)
+  createdAt        DateTime @default(now())
+
+  organization   Organization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  connectedInbox ConnectedInbox  @relation(fields: [connectedInboxId], references: [id])
+  bookingRequest BookingRequest?
+}
+
+enum BookingRequestStatus {
+  NEEDS_REVIEW
+  DISMISSED
+  INFO_REQUESTED
+  CAPTURED
+}
+
+// AI-authored — same fields mean different things once promoted to Booking
+model BookingRequest {
+  id             String               @id @default(cuid())
+  organizationId String
+  artistId       String?
+  rawEmailId     String?              @unique
+  forwardedById  String?
+  assignedToId   String?
+
+  promoter        String?
+  promoterEmail   String?
+  venue           String?
+  city            String?
+  country         String?
+  proposedDate    DateTime?
+  proposedDateRaw String?
+
+  // Fees in smallest currency unit (Stripe convention: 300000 = €3,000)
+  feeAmount      Int?
+  feeMin         Int?
+  feeMax         Int?
+  feeIsRange     Boolean  @default(false)
+  currencyCode   String?
+  currencySymbol String?
+  rawFee         String?
+
+  agencyFeeOnTop Boolean?
+
+  // Flexible offer fields: { event, commercial, logistics, promoterContact }
+  details Json?
+
+  status                BookingRequestStatus @default(NEEDS_REVIEW)
+  confidence            Float?
+  missingFields         String[]
+  conflictFlags         String[]
+  summary               String?
+  notes                 String?
+  recommendedNextAction String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  artist       Artist?      @relation(fields: [artistId], references: [id])
+  rawEmail     RawEmail?    @relation(fields: [rawEmailId], references: [id])
+  forwardedBy  User?        @relation("ForwardedRequests", fields: [forwardedById], references: [id])
+  assignedTo   User?        @relation("AssignedRequests", fields: [assignedToId], references: [id])
+  booking      Booking?
+}
+
+enum BookingStatus {
+  CAPTURED
+  AWAITING_REPLY
+  IN_NEGOTIATION
+  PENCILLED
+  AWAITING_ARTIST
+  AWAITING_PROMOTER
+  CONTRACT_REQUESTED
+  CONTRACT_RECEIVED
+  CONFIRMED
+  LOST
+}
+
+// Human-confirmed — same fee fields as BookingRequest but trusted data
+model Booking {
+  id               String        @id @default(cuid())
+  organizationId   String
+  artistId         String
+  bookingRequestId String        @unique
+
+  promoter       String?
+  venue          String?
+  city           String?
+  country        String?
+  date           DateTime?
+  feeAmount      Int?
+  currencyCode   String?
+  currencySymbol String?
+  agencyFeeOnTop Boolean?
+  status         BookingStatus @default(CAPTURED)
+  notes          String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  organization   Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  artist         Artist         @relation(fields: [artistId], references: [id])
+  bookingRequest BookingRequest @relation(fields: [bookingRequestId], references: [id])
+}
