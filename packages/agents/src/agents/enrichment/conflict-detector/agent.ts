@@ -9,7 +9,8 @@ export const conflictDetectorAgent = new LlmAgent({
   instruction: `You detect booking conflicts for artists.
 
 Read the artist_id from roster_match and proposed_date from extracted_offer in session state.
-Use the check_calendar tool to identify any conflicts.
+If artist_id is null (no roster match), report no conflicts.
+Otherwise, use the check_calendar tool with artist_id and proposed_date.
 
 Report:
 - has_conflict: whether a conflict exists

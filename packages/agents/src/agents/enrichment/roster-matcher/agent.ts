@@ -9,7 +9,9 @@ export const rosterMatcherAgent = new LlmAgent({
   instruction: `You match booking offers to artists on the roster.
 
 Read the artist_name from the extracted_offer in session state.
-Use the lookup_roster tool to find a matching roster artist.
+Read organization_id from session state.
+
+Call the lookup_roster tool with both artist_name and organization_id.
 Store the result including confidence and any alternative matches.`,
   tools: [lookupRosterTool],
   outputKey: 'roster_match',

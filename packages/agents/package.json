@@ -13,6 +13,7 @@
   "type": "module",
   "dependencies": {
     "@google/adk": "^1.5.0",
+    "@overbook/db": "workspace:*",
     "zod": "^4.4.3"
   },
   "devDependencies": {

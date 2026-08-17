@@ -17,12 +17,15 @@ async function main() {
     },
   });
 
+  // Clean up old seed user if it exists
+  await prisma.user.deleteMany({ where: { clerkId: 'seed_clerk_user_001' } });
+
   const user = await prisma.user.upsert({
-    where: { email: 'mali@korda.co' },
-    update: {},
+    where: { email: 'malimccalla@gmail.com' },
+    update: { name: 'Mali McCalla' },
     create: {
       clerkId: 'seed_clerk_user_001',
-      email: 'mali@korda.co',
+      email: 'malimccalla@gmail.com',
       name: 'Mali McCalla',
     },
   });
@@ -62,13 +65,13 @@ async function main() {
 
   await prisma.connectedInbox.upsert({
     where: {
-      organizationId_email: { organizationId: org.id, email: 'mali@korda.co' },
+      organizationId_email: { organizationId: org.id, email: 'malimccalla@gmail.com' },
     },
     update: {},
     create: {
       organizationId: org.id,
       userId: user.id,
-      email: 'mali@korda.co',
+      email: 'malimccalla@gmail.com',
       displayName: 'Korda Music Inbox',
     },
   });

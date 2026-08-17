@@ -45,8 +45,20 @@ const classifyRouter = new RoutedAgent({
 });
 
 // TODO (ADK 2.0): replace SequentialAgent + RoutedAgent with Workflow graph edges
+// Parses "organization_id: <value>" from the first line of the user message
+function extractOrgId(context: { userContent?: { parts?: { text?: string }[] }; state: Record<string, unknown> }) {
+  const text = context.userContent?.parts?.[0]?.text ?? '';
+  const match = text.match(/^organization_id:\s*(.+)/m);
+  if (match) {
+    context.state['organization_id'] = match[1].trim();
+    console.log('[init] organization_id set to:', match[1].trim());
+  }
+  return undefined;
+}
+
 export const rootAgent = new SequentialAgent({
   name: 'overbook_inbound_workflow',
   description: 'Processes inbound booking emails: classify → extract → enrich → queue.',
   subAgents: [emailClassifierAgent, classifyRouter],
+  beforeAgentCallback: extractOrgId,
 });
