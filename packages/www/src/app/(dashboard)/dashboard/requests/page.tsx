@@ -3,7 +3,6 @@
 import { gql, useMutation, useQuery } from "@apollo/client";
 import { useState } from "react";
 
-import { EmailInput } from "./_components/email-input";
 import { RequestDetail } from "./_components/request-detail";
 import { RequestQueue } from "./_components/request-queue";
 
@@ -46,14 +45,6 @@ const BOOKING_REQUESTS = gql`
   }
 `;
 
-const PROCESS_EMAIL = gql`
-  mutation ProcessEmail($emailText: String!) {
-    processEmail(emailText: $emailText) {
-      id
-    }
-  }
-`;
-
 const DISMISS = gql`
   mutation Dismiss($id: String!) {
     dismissBookingRequest(id: $id) {
@@ -75,9 +66,6 @@ export default function RequestsPage() {
   const { data, loading, refetch } = useQuery(BOOKING_REQUESTS, {
     pollInterval: 30000,
   });
-  const [processEmail, { loading: processing }] = useMutation(PROCESS_EMAIL, {
-    onCompleted: () => refetch(),
-  });
   const [dismiss] = useMutation(DISMISS, { onCompleted: () => refetch() });
   const [createBooking] = useMutation(CREATE_BOOKING, {
     onCompleted: () => refetch(),
@@ -94,7 +82,7 @@ export default function RequestsPage() {
     <div className="flex h-full flex-col">
       <div className="flex flex-1 overflow-hidden">
         {/* Queue pane */}
-        <div className="w-[400px] min-w-[340px] max-w-[480px] flex-shrink-0 overflow-y-auto border-r">
+        <div className="w-[340px] min-w-[300px] max-w-[400px] flex-shrink-0 overflow-y-auto border-r">
           <RequestQueue
             requests={requests}
             loading={loading}
@@ -124,9 +112,6 @@ export default function RequestsPage() {
           )}
         </div>
       </div>
-
-      {/* Email input */}
-      <EmailInput processing={processing} onSubmit={(text) => processEmail({ variables: { emailText: text } })} />
     </div>
   );
 }
