@@ -1,6 +1,7 @@
+import { AppSidebar } from "@/components/app-sidebar";
 import { GraphQLProvider } from "@/components/graphql-provider";
-import { OrganizationSwitcher, UserButton } from "@clerk/nextjs";
-import Link from "next/link";
+import { PageHeader } from "@/components/page-header";
+import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 
 export default function DashboardLayout({
   children,
@@ -8,61 +9,14 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex h-screen bg-[#fafafa]">
-      <aside className="flex w-60 flex-col bg-[#1a1a1a] text-white">
-        <div className="flex h-14 items-center gap-2 px-4 border-b border-white/10">
-          <span className="text-base font-semibold tracking-tight">Overbook</span>
-        </div>
-
-        <div className="px-3 pt-4 pb-2">
-          <OrganizationSwitcher
-            appearance={{
-              elements: {
-                rootBox: "w-full",
-                organizationSwitcherTrigger:
-                  "w-full justify-between rounded-md bg-white/5 px-3 py-2 text-sm text-white hover:bg-white/10",
-              },
-            }}
-          />
-        </div>
-
-        <nav className="flex flex-1 flex-col gap-0.5 px-3 pt-4">
-          <SidebarLink href="/requests">Booking Requests</SidebarLink>
-          <SidebarLink href="/bookings">Bookings</SidebarLink>
-          <SidebarLink href="/roster">Roster</SidebarLink>
-        </nav>
-
-        <div className="border-t border-white/10 px-4 py-3">
-          <UserButton
-            appearance={{
-              elements: {
-                avatarBox: "h-8 w-8",
-              },
-            }}
-          />
-        </div>
-      </aside>
-
-      <main className="flex-1 overflow-y-auto">
-        <GraphQLProvider>{children}</GraphQLProvider>
-      </main>
-    </div>
-  );
-}
-
-function SidebarLink({
-  href,
-  children,
-}: {
-  href: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <Link
-      href={href}
-      className="rounded-md px-3 py-2 text-[13px] font-medium text-white/70 transition-colors hover:bg-white/10 hover:text-white"
-    >
-      {children}
-    </Link>
+    <GraphQLProvider>
+      <SidebarProvider>
+        <AppSidebar />
+        <SidebarInset>
+          <PageHeader />
+          <div className="flex-1 overflow-hidden">{children}</div>
+        </SidebarInset>
+      </SidebarProvider>
+    </GraphQLProvider>
   );
 }
