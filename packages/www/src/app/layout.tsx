@@ -2,12 +2,10 @@ import { ClerkProvider } from "@clerk/nextjs";
 import "./globals.css";
 
 import type { Metadata } from "next";
-import { DM_Sans, Space_Mono } from "next/font/google";
+import { DM_Sans, Space_Mono, Inter } from "next/font/google";
+import { cn } from "@/lib/utils";
 
-const dmSans = DM_Sans({
-  variable: "--font-sans",
-  subsets: ["latin"],
-});
+const inter = Inter({subsets:['latin'],variable:'--font-sans'});
 
 const spaceMono = Space_Mono({
   variable: "--font-mono",
@@ -28,7 +26,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${dmSans.variable} ${spaceMono.variable} h-full antialiased`}
+      className={cn("h-full", "antialiased", spaceMono.variable, "font-sans", inter.variable)}
     >
       <body className="min-h-full flex flex-col font-sans">
         <ClerkProvider>
