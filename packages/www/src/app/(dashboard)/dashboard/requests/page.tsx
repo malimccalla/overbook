@@ -1,7 +1,8 @@
 "use client";
 
-import { gql, useQuery } from "@apollo/client";
+import { gql, useMutation, useQuery } from "@apollo/client";
 import Link from "next/link";
+import { useState } from "react";
 
 const BOOKING_REQUESTS = gql`
   query BookingRequests {
@@ -26,13 +27,34 @@ const BOOKING_REQUESTS = gql`
   }
 `;
 
+const PROCESS_EMAIL = gql`
+  mutation ProcessEmail($emailText: String!) {
+    processEmail(emailText: $emailText) {
+      id
+    }
+  }
+`;
+
 export default function RequestsPage() {
-  const { data, loading, error } = useQuery(BOOKING_REQUESTS, {
+  const { data, loading, error, refetch } = useQuery(BOOKING_REQUESTS, {
     pollInterval: 30000,
   });
+  const [processEmail, { loading: processing }] = useMutation(PROCESS_EMAIL, {
+    onCompleted: () => {
+      setEmailText("");
+      refetch();
+    },
+  });
+  const [emailText, setEmailText] = useState("");
+
+  const handleSubmit = () => {
+    if (!emailText.trim() || processing) return;
+    processEmail({ variables: { emailText: emailText.trim() } });
+  };
 
   return (
-    <div className="p-8">
+    <div className="flex h-full flex-col">
+      <div className="flex-1 overflow-y-auto p-8">
       <div className="flex items-center justify-between">
         <h1 className="text-lg font-semibold text-zinc-900">
           Booking Requests
@@ -128,6 +150,52 @@ export default function RequestsPage() {
           </table>
         </div>
       )}
+      </div>
+
+      {/* Chat-style email input */}
+      <div className="border-t border-zinc-200 bg-white px-8 py-4">
+        <div className="mx-auto max-w-[720px]">
+          {processing ? (
+            <div className="flex items-center gap-3 rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-3">
+              <div className="h-4 w-4 animate-spin rounded-full border-2 border-zinc-300 border-t-zinc-600" />
+              <span className="text-sm text-zinc-500">
+                Processing email through agent pipeline...
+              </span>
+            </div>
+          ) : (
+            <div className="overflow-hidden rounded-xl border border-zinc-200 focus-within:border-zinc-400">
+              <textarea
+                value={emailText}
+                onChange={(e) => setEmailText(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && e.metaKey) handleSubmit();
+                }}
+                placeholder="Paste a booking email..."
+                rows={emailText.includes("\n") ? 4 : 1}
+                className="w-full resize-none border-0 bg-white px-4 pt-3 pb-2 text-sm placeholder:text-zinc-400 focus:outline-none"
+              />
+              <div className="flex items-center justify-between bg-white px-3 pb-2">
+                <button
+                  type="button"
+                  className="flex h-7 w-7 items-center justify-center rounded-md text-zinc-400 hover:bg-zinc-100 hover:text-zinc-600"
+                >
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+                    <line x1="8" y1="3" x2="8" y2="13" />
+                    <line x1="3" y1="8" x2="13" y2="8" />
+                  </svg>
+                </button>
+                <button
+                  onClick={handleSubmit}
+                  disabled={!emailText.trim()}
+                  className="flex h-7 items-center gap-1.5 rounded-md bg-zinc-900 px-3 text-xs font-medium text-white hover:bg-zinc-800 disabled:opacity-40"
+                >
+                  Send
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

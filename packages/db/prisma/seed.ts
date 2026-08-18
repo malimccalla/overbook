@@ -9,22 +9,22 @@ const prisma = new PrismaClient({ adapter });
 
 async function main() {
   const org = await prisma.organization.upsert({
-    where: { slug: 'korda-music' },
-    update: {},
+    where: { id: 'org_elastic_artists' },
+    update: { clerkOrgId: 'org_3I2ZYYJ9MlhUVcIA7Xw35vbChb9' },
     create: {
-      name: 'Korda Music',
-      slug: 'korda-music',
+      id: 'org_elastic_artists',
+      name: 'Elastic Artists',
+      slug: 'elastic-artists',
+      clerkOrgId: 'org_3I2ZYYJ9MlhUVcIA7Xw35vbChb9',
     },
   });
 
-  // Clean up old seed user if it exists
-  await prisma.user.deleteMany({ where: { clerkId: 'seed_clerk_user_001' } });
-
   const user = await prisma.user.upsert({
-    where: { email: 'malimccalla@gmail.com' },
-    update: { name: 'Mali McCalla' },
+    where: { id: 'user_mali' },
+    update: { clerkId: 'user_3I2ZLQBXsPlee5Dt7RXlOZ9aGKl' },
     create: {
-      clerkId: 'seed_clerk_user_001',
+      id: 'user_mali',
+      clerkId: 'user_3I2ZLQBXsPlee5Dt7RXlOZ9aGKl',
       email: 'malimccalla@gmail.com',
       name: 'Mali McCalla',
     },
@@ -41,24 +41,63 @@ async function main() {
   });
 
   const artists = [
-    { name: 'Dan Shake', aliases: [], genres: ['house', 'disco'] },
-    { name: 'TENNIN', aliases: [], genres: ['electronic', 'experimental'] },
-    { name: 'OUO', aliases: [], genres: ['electronic', 'club'] },
+    'Acid Pauli',
+    'AliA',
+    'Âme',
+    'Axel Boman',
+    'Bibi Seck',
+    'CC:DISCO!',
+    'Cinthie',
+    'Cormac',
+    'Curses',
+    'Dan Shake',
+    'Denis Horvat',
+    'Dixon',
+    'DJ Fuckoff',
+    'Elkka',
+    'Fiona Zanetti',
+    'Fonzo',
+    'Franziska Berns',
+    'Gerd Janson',
+    'Howling',
+    'HUNEE',
+    'HVOB',
+    'JAMIIE',
+    'Jimi Jules',
+    'Julya Karma',
+    'KOLLIN',
+    'Laurence Guy',
+    'LazerGazer',
+    'Lola Haro',
+    'Ludmila Di Pasquale',
+    'Ma Sha',
+    'Mietze Conte',
+    'Miley Serious',
+    'Mr Scruff',
+    'Noah Baine',
+    'Paula Tape',
+    'Riria',
+    'Roman Flügel',
+    'RY X (DJ)',
+    'ryota',
+    "Sama' Abdulhadi",
+    'Tai Lokun',
+    'Trikk',
+    'X & Ivy',
+    'Yung Singh',
   ];
 
-  for (const a of artists) {
+  for (const name of artists) {
+    const id = `artist_${name.toLowerCase().replace(/[^a-z0-9]/g, '_')}`;
     await prisma.artist.upsert({
-      where: {
-        id: `seed_${a.name.toLowerCase().replace(/\s/g, '_')}`,
-      },
-      update: {},
+      where: { id },
+      update: { name },
       create: {
-        id: `seed_${a.name.toLowerCase().replace(/\s/g, '_')}`,
+        id,
         organizationId: org.id,
-        agentId: user.id,
-        name: a.name,
-        aliases: a.aliases,
-        genres: a.genres,
+        name,
+        aliases: [],
+        genres: [],
       },
     });
   }
@@ -72,11 +111,11 @@ async function main() {
       organizationId: org.id,
       userId: user.id,
       email: 'malimccalla@gmail.com',
-      displayName: 'Korda Music Inbox',
+      displayName: 'Elastic Artists Inbox',
     },
   });
 
-  console.log('Seeded: org=%s, user=%s, 3 artists, 1 inbox', org.id, user.id);
+  console.log('Seeded: org=%s, user=%s, %d artists, 1 inbox', org.id, user.id, artists.length);
 }
 
 main()

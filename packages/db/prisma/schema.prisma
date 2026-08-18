@@ -126,6 +126,14 @@ model RawEmail {
   @@map("raw_emails")
 }
 
+enum BookingRequestSource {
+  EMAIL
+  MANUAL_PASTE
+  API
+
+  @@map("booking_request_source")
+}
+
 enum BookingRequestStatus {
   NEEDS_REVIEW
   DISMISSED
@@ -161,6 +169,7 @@ model BookingRequest {
 
   agencyFeeOnTop Boolean? @map("agency_fee_on_top")
 
+  source  BookingRequestSource @default(API)
   details Json?
 
   status                BookingRequestStatus @default(NEEDS_REVIEW)

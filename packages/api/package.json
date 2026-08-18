@@ -15,6 +15,7 @@
     "@apollo/server": "^5.5.1",
     "@as-integrations/express5": "^1.1.2",
     "@clerk/express": "^2.1.57",
+    "@overbook/agents": "workspace:*",
     "@overbook/db": "workspace:*",
     "@pothos/core": "^4.13.1",
     "cors": "^2.8.6",

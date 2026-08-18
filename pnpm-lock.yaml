@@ -240,6 +240,9 @@ importers:
       '@clerk/express':
         specifier: ^2.1.57
         version: 2.1.57(express@5.2.1(supports-color@5.5.0))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      '@overbook/agents':
+        specifier: workspace:*
+        version: link:../agents
       '@overbook/db':
         specifier: workspace:*
         version: link:../db
