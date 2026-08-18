@@ -13,4 +13,15 @@ export class ArtistService {
     if (!artist || artist.organizationId !== orgId) return null;
     return artist;
   }
+
+  async create(orgId: string, input: { name: string; aliases?: string[]; genres?: string[] }) {
+    return db.artist.create({
+      data: {
+        organizationId: orgId,
+        name: input.name,
+        aliases: input.aliases ?? [],
+        genres: input.genres ?? [],
+      },
+    });
+  }
 }

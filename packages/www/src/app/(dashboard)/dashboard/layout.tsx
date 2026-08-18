@@ -1,3 +1,4 @@
+import { GraphQLProvider } from "@/components/graphql-provider";
 import { OrganizationSwitcher, UserButton } from "@clerk/nextjs";
 import Link from "next/link";
 
@@ -42,7 +43,9 @@ export default function DashboardLayout({
         </div>
       </aside>
 
-      <main className="flex-1 overflow-y-auto">{children}</main>
+      <main className="flex-1 overflow-y-auto">
+        <GraphQLProvider>{children}</GraphQLProvider>
+      </main>
     </div>
   );
 }
