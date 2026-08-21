@@ -20,7 +20,8 @@
     "@pothos/core": "^4.13.1",
     "cors": "^2.8.6",
     "express": "^5.2.1",
-    "graphql": "^16.14.2"
+    "graphql": "^16.14.2",
+    "nylas": "^7.8.1"
   },
   "devDependencies": {
     "@types/cors": "^2.8.19",

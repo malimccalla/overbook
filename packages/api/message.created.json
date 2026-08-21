@@ -1,0 +1,58 @@
+Mock payload for 'message.created':
+
+{
+  "data": {
+    "data": {
+      "application_id": "mock-application-id",
+      "object": {
+        "body": "\u003cp\u003emock body\u003c/p\u003e",
+        "cc": [
+          {
+            "email": "cc@nylas.com",
+            "name": "mock-cc-name"
+          },
+          {
+            "email": "cc@nylas.com",
+            "name": "mock-cc-name-2"
+          }
+        ],
+        "date": 1234567890,
+        "folders": [
+          "INBOX"
+        ],
+        "from": [
+          {
+            "email": "from@nylas.com",
+            "name": "mock-from"
+          }
+        ],
+        "grant_id": "mock-grant-id",
+        "id": "mock-id",
+        "metadata": {
+          "key1": "all-meetings",
+          "key2": "on-site"
+        },
+        "object": "message",
+        "reply_to_message_id": "\u003creply_to_message_id@nylas.com\u003e",
+        "snippet": "mock-snippet",
+        "starred": false,
+        "subject": "mock-subject",
+        "thread_id": "mock-thread-id",
+        "to": [
+          {
+            "email": "to@nylas.com",
+            "name": "mock-to-name"
+          }
+        ],
+        "unread": true
+      }
+    },
+    "id": "mock-id",
+    "source": "/google/emails/realtime",
+    "specversion": "1.0",
+    "time": 1234567891,
+    "type": "message.created",
+    "webhook_delivery_attempt": 1
+  },
+  "request_id": "1956378287-fb8f4914-768d-47c4-afe0-20b1a672a592"
+}

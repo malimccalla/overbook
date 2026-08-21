@@ -104,25 +104,29 @@ model ConnectedInbox {
 }
 
 model RawEmail {
-  id               String   @id @default(cuid())
-  organizationId   String   @map("organization_id")
-  connectedInboxId String   @map("connected_inbox_id")
-  nylasMessageId   String   @unique @map("nylas_message_id")
+  id               String    @id @default(cuid())
+  organizationId   String    @map("organization_id")
+  connectedInboxId String?   @map("connected_inbox_id")
+  nylasMessageId   String?   @unique @map("nylas_message_id")
+  threadId         String?   @map("thread_id")
   subject          String?
-  bodyText         String   @db.Text @map("body_text")
-  bodyHtml         String?  @db.Text @map("body_html")
-  fromEmail        String?  @map("from_email")
-  fromName         String?  @map("from_name")
-  receivedAt       DateTime @map("received_at")
-  hasAttachments   Boolean  @default(false) @map("has_attachments")
-  createdAt        DateTime @default(now()) @map("created_at")
+  bodyText         String    @db.Text @map("body_text")
+  bodyHtml         String?   @db.Text @map("body_html")
+  fromEmail        String?   @map("from_email")
+  fromName         String?   @map("from_name")
+  toEmail          String?   @map("to_email")
+  toName           String?   @map("to_name")
+  receivedAt       DateTime  @map("received_at")
+  hasAttachments   Boolean   @default(false) @map("has_attachments")
+  createdAt        DateTime  @default(now()) @map("created_at")
 
   organization   Organization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  connectedInbox ConnectedInbox  @relation(fields: [connectedInboxId], references: [id])
+  connectedInbox ConnectedInbox? @relation(fields: [connectedInboxId], references: [id])
   bookingRequest BookingRequest?
 
   @@index([organizationId])
   @@index([connectedInboxId])
+  @@index([threadId])
   @@map("raw_emails")
 }
 

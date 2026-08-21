@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { formatDistanceToNow } from "@/lib/format";
+import { Calendar, CheckCircle2, CircleDashed, DollarSign, MapPin, Send, User } from "lucide-react";
 
 import type { QueueRequest } from "./request-queue";
 
@@ -34,92 +35,84 @@ interface RequestDetailProps {
 
 export function RequestDetail({ request, onDismiss, onCreateBooking }: RequestDetailProps) {
   const req = request;
+  const title = deriveTitle(req);
+  const subtitle = req.proposedDate
+    ? new Date(req.proposedDate).toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short", year: "numeric" })
+    : req.proposedDateRaw ?? "";
 
   return (
     <div className="flex h-full flex-col">
-      {/* Sticky header */}
-      <div className="shrink-0 border-b px-6 py-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <h2 className="text-sm font-semibold">
-              {req.artist?.name ?? "Unknown artist"}
-            </h2>
-            <StatusBadge status={req.status} />
+      {/* Header */}
+      <div className="shrink-0 border-b px-6 py-3">
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex items-start gap-2.5 min-w-0">
+            <CircleDashed className="h-4 w-4 shrink-0 text-muted-foreground mt-0.5" strokeWidth={2} />
+            <div className="min-w-0">
+              <h2 className="text-sm font-semibold truncate">{title}</h2>
+              {subtitle && <p className="text-xs text-muted-foreground">{subtitle}</p>}
+            </div>
           </div>
 
           {req.status === "NEEDS_REVIEW" && (
-            <div className="flex items-center gap-2">
-              <Button size="sm" onClick={onCreateBooking}>
-                Progress to booking
+            <div className="flex items-center gap-2 shrink-0">
+              <Button size="sm" onClick={onCreateBooking} className="gap-1.5 h-7 text-xs">
+                <CheckCircle2 className="h-3 w-3" />
+                Pencil
               </Button>
-              <Button size="sm" variant="outline" onClick={onDismiss}>
+              <Button size="sm" variant="outline" className="gap-1.5 h-7 text-xs">
+                <Send className="h-3 w-3" />
+                Approve
+              </Button>
+              <Button size="sm" variant="ghost" className="h-7 text-xs text-muted-foreground" onClick={onDismiss}>
                 Decline
               </Button>
             </div>
           )}
-        </div>
 
-        {/* Summary row */}
-        <div className="mt-3 grid grid-cols-4 gap-4">
-          <SummaryField
-            label="Fee"
-            value={req.rawFee ?? "Fee missing"}
-            uncertain={!req.rawFee}
-          />
-          <SummaryField
-            label="Date"
-            value={req.proposedDate ? formatEventDate(req.proposedDate) : (req.proposedDateRaw ?? "Date TBC")}
-            uncertain={!req.proposedDate}
-          />
-          <SummaryField
-            label="Location"
-            value={[req.city, req.country].filter(Boolean).join(", ") || "Location TBC"}
-            secondary={req.venue ?? undefined}
-            uncertain={!req.city}
-          />
-          <SummaryField
-            label="Promoter"
-            value={req.promoter ?? "Unknown"}
-            uncertain={!req.promoter}
-          />
+          {req.status !== "NEEDS_REVIEW" && (
+            <StatusBadge status={req.status} />
+          )}
         </div>
       </div>
 
       {/* Scrollable body */}
       <ScrollArea className="flex-1">
-        <div className="space-y-6 px-6 py-5">
-          {/* Decision context */}
+        <div className="px-6 py-4">
+          {/* Detail rows */}
+          <div className="divide-y">
+            <DetailRow icon={<User className="h-3.5 w-3.5" />} label="Artist" value={req.artist?.name ?? "Unmatched"} />
+            <DetailRow icon={<MapPin className="h-3.5 w-3.5" />} label="Venue" value={req.venue} />
+            <DetailRow icon={<MapPin className="h-3.5 w-3.5" />} label="Location" value={[req.city, req.country].filter(Boolean).join(", ")} />
+            <DetailRow icon={<Calendar className="h-3.5 w-3.5" />} label="Date" value={req.proposedDate ? new Date(req.proposedDate).toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", year: "numeric" }) : req.proposedDateRaw} />
+            <DetailRow icon={<DollarSign className="h-3.5 w-3.5" />} label="Fee" value={req.rawFee} />
+            <DetailRow icon={<User className="h-3.5 w-3.5" />} label="Promoter" value={req.promoter} />
+            <DetailRow icon={<User className="h-3.5 w-3.5" />} label="Email" value={req.promoterEmail} />
+          </div>
+
+          {/* Flags */}
           {(req.missingFields.length > 0 || req.conflictFlags.length > 0) && (
-            <section>
-              <SectionLabel>Decision context</SectionLabel>
-              <div className="mt-2 space-y-2">
-                {req.conflictFlags.map((flag) => (
-                  <Flag key={flag} type="conflict">{flag}</Flag>
-                ))}
-                {req.missingFields.map((field) => (
-                  <Flag key={field} type="missing">{field} is missing from the request</Flag>
-                ))}
-              </div>
-            </section>
+            <div className="flex flex-wrap gap-2 mt-4">
+              {req.conflictFlags.map((flag) => (
+                <Badge key={flag} variant="destructive" className="text-[11px]">
+                  {flag}
+                </Badge>
+              ))}
+              {req.missingFields.map((field) => (
+                <Badge key={field} variant="outline" className="text-[11px] text-amber-600 border-amber-200">
+                  {field} missing
+                </Badge>
+              ))}
+            </div>
           )}
 
-          {/* Extracted details */}
-          <section>
-            <SectionLabel>Request details</SectionLabel>
-            <div className="mt-2 grid grid-cols-2 gap-x-8 gap-y-3">
-              <DetailField label="Fee" value={req.rawFee} />
-              <DetailField label="Currency" value={req.currencyCode} />
-              <DetailField label="Date" value={req.proposedDate ? formatEventDate(req.proposedDate) : req.proposedDateRaw} />
-              <DetailField label="Venue" value={req.venue} />
-              <DetailField label="City" value={[req.city, req.country].filter(Boolean).join(", ")} />
-              <DetailField label="Promoter" value={req.promoter} />
-              <DetailField label="Promoter email" value={req.promoterEmail} />
-            </div>
-          </section>
+          {/* Deal terms */}
+          {req.details && typeof req.details === "object" && (
+            <DealTerms details={req.details as Record<string, unknown>} />
+          )}
 
           {/* Source message */}
           {req.rawEmail && (
-            <section>
+            <div className="mt-6">
               <SectionLabel>Source message</SectionLabel>
               <div className="mt-2 rounded-md border bg-muted/30 p-4">
                 <div className="flex items-baseline justify-between">
@@ -136,77 +129,59 @@ export function RequestDetail({ request, onDismiss, onCreateBooking }: RequestDe
                   {req.rawEmail.bodyText}
                 </pre>
               </div>
-            </section>
+            </div>
           )}
 
           {/* Activity */}
-          <section>
+          <div className="mt-6">
             <SectionLabel>Activity</SectionLabel>
             <div className="mt-2 space-y-2">
-              <ActivityEvent
-                time={req.createdAt}
-                label="Request received and extracted"
-              />
+              <ActivityEvent time={req.createdAt} label="Request received and extracted" />
               {req.artist && (
-                <ActivityEvent
-                  time={req.createdAt}
-                  label={`Matched to ${req.artist.name}`}
-                />
+                <ActivityEvent time={req.createdAt} label={`Matched to ${req.artist.name}`} />
               )}
               {req.status === "DISMISSED" && (
-                <ActivityEvent
-                  time={req.updatedAt ?? req.createdAt}
-                  label="Declined"
-                />
+                <ActivityEvent time={req.updatedAt ?? req.createdAt} label="Declined" />
               )}
               {req.status === "CAPTURED" && (
-                <ActivityEvent
-                  time={req.updatedAt ?? req.createdAt}
-                  label="Progressed to booking"
-                />
+                <ActivityEvent time={req.updatedAt ?? req.createdAt} label="Progressed to booking" />
               )}
             </div>
-          </section>
+          </div>
         </div>
       </ScrollArea>
     </div>
   );
 }
 
-function SummaryField({ label, value, secondary, uncertain }: { label: string; value: string; secondary?: string; uncertain?: boolean }) {
+function DetailRow({ icon, label, value }: { icon: React.ReactNode; label: string; value: string | null | undefined }) {
   return (
-    <div>
-      <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">{label}</p>
-      <p className={`mt-0.5 text-sm ${uncertain ? "text-muted-foreground italic" : "text-foreground"}`}>
-        {value}
-      </p>
-      {secondary && <p className="text-xs text-muted-foreground">{secondary}</p>}
+    <div className="flex items-center gap-3 py-2.5">
+      <span className="text-muted-foreground">{icon}</span>
+      <span className="w-20 shrink-0 text-xs text-muted-foreground">{label}</span>
+      <span className="text-sm text-foreground truncate">{value || "—"}</span>
+    </div>
+  );
+}
+
+function DealTerms({ details }: { details: Record<string, unknown> }) {
+  const terms = (details.offer_terms ?? details.offerTerms) as string[] | undefined;
+  if (!terms || terms.length === 0) return null;
+
+  return (
+    <div className="mt-6">
+      <SectionLabel>Deal terms</SectionLabel>
+      <ul className="mt-2 space-y-1">
+        {terms.map((term, i) => (
+          <li key={i} className="text-xs text-foreground/80">· {term}</li>
+        ))}
+      </ul>
     </div>
   );
 }
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return <h3 className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{children}</h3>;
-}
-
-function DetailField({ label, value }: { label: string; value: string | null | undefined }) {
-  return (
-    <div>
-      <p className="text-xs text-muted-foreground">{label}</p>
-      <p className="text-sm text-foreground">{value || "—"}</p>
-    </div>
-  );
-}
-
-function Flag({ type, children }: { type: "conflict" | "missing"; children: React.ReactNode }) {
-  return (
-    <div className={`flex items-start gap-2 rounded-md border px-3 py-2 text-xs ${
-      type === "conflict" ? "border-destructive/20 bg-destructive/5 text-destructive" : "border-amber-200 bg-amber-50 text-amber-700"
-    }`}>
-      <span className="mt-px shrink-0">{type === "conflict" ? "⚠" : "○"}</span>
-      <span>{children}</span>
-    </div>
-  );
 }
 
 function ActivityEvent({ time, label }: { time: string; label: string }) {
@@ -238,11 +213,9 @@ function StatusBadge({ status }: { status: string }) {
   );
 }
 
-function formatEventDate(date: string) {
-  return new Date(date).toLocaleDateString("en-GB", {
-    weekday: "short",
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
+function deriveTitle(req: { venue: string | null; city: string | null; promoter: string | null; details?: unknown }) {
+  const details = req.details as Record<string, unknown> | null;
+  const eventName = details?.event_name as string ?? details?.eventName as string;
+  const title = eventName || req.venue || req.promoter || "Untitled request";
+  return req.city ? `${title} · ${req.city}` : title;
 }

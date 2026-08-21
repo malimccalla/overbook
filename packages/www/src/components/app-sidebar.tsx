@@ -13,8 +13,7 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { OrganizationSwitcher, UserButton } from "@clerk/nextjs";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 
 const navItems = [
   { label: "Requests", href: "/requests" },
@@ -24,6 +23,7 @@ const navItems = [
 
 export function AppSidebar() {
   const pathname = usePathname();
+  const router = useRouter();
 
   return (
     <Sidebar collapsible="icon">
@@ -50,8 +50,11 @@ export function AppSidebar() {
                 const isActive = pathname.startsWith(item.href);
                 return (
                   <SidebarMenuItem key={item.href}>
-                    <SidebarMenuButton asChild isActive={isActive}>
-                      <Link href={item.href}>{item.label}</Link>
+                    <SidebarMenuButton
+                      isActive={isActive}
+                      onClick={() => router.push(item.href)}
+                    >
+                      {item.label}
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 );

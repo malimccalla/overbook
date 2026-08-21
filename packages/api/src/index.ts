@@ -10,16 +10,24 @@ import express from 'express';
 
 import type { ApiContext } from './graphql/context.js';
 import { schema } from './graphql/schema.js';
+import { nylasCallback, nylasConnect } from './routes/nylas-auth.js';
 import { clerkWebhookHandler } from './webhooks/clerk.js';
+import { nylasWebhookChallenge, nylasWebhookHandler } from './webhooks/nylas.js';
 
 const app = express();
 const httpServer = http.createServer(app);
 
-// Webhook route needs raw body — must come before any body parsers
+// Webhook routes need raw body — must come before any body parsers
 app.post('/webhooks/clerk', express.raw({ type: 'application/json' }), clerkWebhookHandler);
+app.get('/webhooks/nylas', nylasWebhookChallenge);
+app.post('/webhooks/nylas', express.raw({ type: 'application/json' }), nylasWebhookHandler);
 
 // Clerk middleware extracts auth from Bearer token
 app.use(clerkMiddleware());
+
+// Nylas OAuth routes
+app.get('/auth/nylas/connect', nylasConnect);
+app.get('/auth/nylas/callback', nylasCallback);
 
 const server = new ApolloServer<ApiContext>({
   schema,
