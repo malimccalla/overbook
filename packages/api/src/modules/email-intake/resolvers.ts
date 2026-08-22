@@ -1,12 +1,12 @@
 import { GraphQLError } from 'graphql';
 
 import { builder } from '../../graphql/builder.js';
-import { BookingRequestRef } from '../booking-request/types.js';
+import { BookingRef } from '../booking/types.js';
 import { EmailIntakeService } from './service.js';
 
 builder.mutationField('processEmail', (t) =>
   t.field({
-    type: BookingRequestRef,
+    type: BookingRef,
     nullable: true,
     args: {
       emailText: t.arg.string({ required: true }),

@@ -1,7 +1,7 @@
 import { GraphQLError } from 'graphql';
 
 import { builder } from '../../graphql/builder.js';
-import { ArtistRef } from '../booking-request/types.js';
+import { ArtistRef } from '../booking/types.js';
 import { ArtistService } from './service.js';
 
 builder.queryField('artists', (t) =>

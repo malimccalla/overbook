@@ -1,68 +1,25 @@
 import { db } from '@overbook/db';
+import type { BookingStatus } from '@overbook/db';
 import { GraphQLError } from 'graphql';
 
-export class BookingService {
-  async createFromRequest(orgId: string, bookingRequestId: string) {
-    const request = await db.bookingRequest.findUnique({
-      where: { id: bookingRequestId },
-    });
-
-    if (!request || request.organizationId !== orgId) {
-      throw new GraphQLError('Booking request not found', {
-        extensions: { code: 'NOT_FOUND' },
-      });
-    }
-
-    if (!request.artistId) {
-      throw new GraphQLError('Cannot create booking without a matched artist', {
-        extensions: { code: 'BAD_USER_INPUT' },
-      });
-    }
-
-    if (request.status === 'CAPTURED') {
-      throw new GraphQLError('Booking request already captured', {
-        extensions: { code: 'CONFLICT' },
-      });
-    }
-
-    const [booking] = await db.$transaction([
-      db.booking.create({
-        data: {
-          organizationId: orgId,
-          artistId: request.artistId,
-          bookingRequestId: request.id,
-          promoter: request.promoter,
-          venue: request.venue,
-          city: request.city,
-          country: request.country,
-          date: request.proposedDate,
-          feeAmount: request.feeAmount,
-          currencyCode: request.currencyCode,
-          status: 'CAPTURED',
-        },
-        include: { artist: true, bookingRequest: true },
-      }),
-      db.bookingRequest.update({
-        where: { id: request.id },
-        data: { status: 'CAPTURED' },
-      }),
-    ]);
-
-    return booking;
-  }
-
-  async list(orgId: string) {
+export class BookingRequestService {
+  async list(orgId: string, opts?: { status?: BookingStatus; limit?: number; offset?: number }) {
     return db.booking.findMany({
-      where: { organizationId: orgId },
-      include: { artist: true },
+      where: {
+        organizationId: orgId,
+        ...(opts?.status && { status: opts.status }),
+      },
+      include: { artist: true, rawEmail: true },
       orderBy: { createdAt: 'desc' },
+      take: opts?.limit ?? 50,
+      skip: opts?.offset ?? 0,
     });
   }
 
   async getById(orgId: string, id: string) {
     const booking = await db.booking.findUnique({
       where: { id },
-      include: { artist: true, bookingRequest: true },
+      include: { artist: true, rawEmail: true },
     });
 
     if (!booking || booking.organizationId !== orgId) {
@@ -72,5 +29,24 @@ export class BookingService {
     }
 
     return booking;
+  }
+
+  async updateStatus(orgId: string, id: string, status: BookingStatus) {
+    await this.getById(orgId, id);
+
+    return db.booking.update({
+      where: { id },
+      data: { status },
+      include: { artist: true },
+    });
+  }
+
+  async count(orgId: string, status?: BookingStatus) {
+    return db.booking.count({
+      where: {
+        organizationId: orgId,
+        ...(status && { status }),
+      },
+    });
   }
 }

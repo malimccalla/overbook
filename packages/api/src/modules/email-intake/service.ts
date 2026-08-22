@@ -15,12 +15,12 @@ export class EmailIntakeService {
     }
 
     // Return the most recently created BookingRequest for this org
-    const request = await db.bookingRequest.findFirst({
+    const booking = await db.booking.findFirst({
       where: { organizationId: orgId },
       orderBy: { createdAt: 'desc' },
       include: { artist: true },
     });
 
-    return request;
+    return booking;
   }
 }

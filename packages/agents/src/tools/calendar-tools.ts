@@ -14,27 +14,17 @@ export const checkCalendarTool = new FunctionTool({
     const windowStart = new Date(date.getTime() - 14 * 86400000);
     const windowEnd = new Date(date.getTime() + 14 * 86400000);
 
-    const [nearbyBookings, nearbyRequests] = await Promise.all([
-      db.booking.findMany({
-        where: {
-          artistId: artist_id,
-          date: { gte: windowStart, lte: windowEnd },
-          status: { not: 'LOST' },
-        },
-        select: { id: true, date: true, venue: true, city: true, status: true },
-      }),
-      db.bookingRequest.findMany({
-        where: {
-          artistId: artist_id,
-          proposedDate: { gte: windowStart, lte: windowEnd },
-          status: { not: 'DISMISSED' },
-        },
-        select: { id: true, proposedDate: true, venue: true, city: true, status: true },
-      }),
-    ]);
+    const nearbyBookings = await db.booking.findMany({
+      where: {
+        artistId: artist_id,
+        proposedDate: { gte: windowStart, lte: windowEnd },
+        status: { notIn: ['DECLINED', 'LOST'] },
+      },
+      select: { id: true, proposedDate: true, venue: true, city: true, status: true },
+    });
 
     const exactConflict = nearbyBookings.some(
-      (b) => b.date && b.date.toISOString().slice(0, 10) === date.toISOString().slice(0, 10),
+      (b) => b.proposedDate && b.proposedDate.toISOString().slice(0, 10) === date.toISOString().slice(0, 10),
     );
 
     return {
@@ -42,15 +32,10 @@ export const checkCalendarTool = new FunctionTool({
       conflict_type: exactConflict ? 'EXACT_DATE' : nearbyBookings.length > 0 ? 'NEARBY' : null,
       nearby_bookings: nearbyBookings.map((b) => ({
         id: b.id,
-        date: b.date?.toISOString(),
+        date: b.proposedDate?.toISOString(),
         venue: b.venue,
         city: b.city,
-      })),
-      nearby_requests: nearbyRequests.map((r) => ({
-        id: r.id,
-        date: r.proposedDate?.toISOString(),
-        venue: r.venue,
-        city: r.city,
+        status: b.status,
       })),
     };
   },
@@ -64,9 +49,9 @@ export const getArtistCalendarTool = new FunctionTool({
   }),
   execute: async ({ artist_id }) => {
     const bookings = await db.booking.findMany({
-      where: { artistId: artist_id, status: { not: 'LOST' } },
-      select: { id: true, date: true, venue: true, city: true, status: true },
-      orderBy: { date: 'asc' },
+      where: { artistId: artist_id, status: { notIn: ['DECLINED', 'LOST'] } },
+      select: { id: true, proposedDate: true, venue: true, city: true, status: true },
+      orderBy: { proposedDate: 'asc' },
     });
 
     return { bookings };

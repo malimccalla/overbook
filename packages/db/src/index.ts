@@ -14,5 +14,5 @@ export const db = globalForPrisma.prisma ?? createClient();
 if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = db;
 
 export * from '../generated/prisma/client';
-export type { Organization, User, Membership, Artist, ConnectedInbox, RawEmail, BookingRequest, Booking } from '../generated/prisma/client';
-export type { BookingRequestStatus, BookingStatus, MemberRole } from '../generated/prisma/client';
+export type { Organization, User, Membership, Artist, ConnectedInbox, RawEmail, Booking } from '../generated/prisma/client';
+export type { BookingStatus, BookingSource, MemberRole } from '../generated/prisma/client';

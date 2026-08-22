@@ -1,11 +1,34 @@
-import type { Artist, Booking, BookingRequest } from '@overbook/db';
+import type { Artist, Booking, RawEmail } from '@overbook/db';
 
 import { builder } from '../../graphql/builder.js';
-import { ArtistRef, BookingRequestRef } from '../booking-request/types.js';
+
+// -- Object types --
+
+const ArtistRef = builder.objectRef<Artist>('Artist');
+builder.objectType(ArtistRef, {
+  fields: (t) => ({
+    id: t.exposeString('id'),
+    name: t.exposeString('name'),
+    aliases: t.exposeStringList('aliases'),
+    genres: t.exposeStringList('genres'),
+  }),
+});
+
+const RawEmailRef = builder.objectRef<RawEmail>('RawEmail');
+builder.objectType(RawEmailRef, {
+  fields: (t) => ({
+    id: t.exposeString('id'),
+    subject: t.exposeString('subject', { nullable: true }),
+    fromEmail: t.exposeString('fromEmail', { nullable: true }),
+    fromName: t.exposeString('fromName', { nullable: true }),
+    bodyText: t.exposeString('bodyText'),
+    receivedAt: t.expose('receivedAt', { type: 'DateTime' }),
+  }),
+});
 
 type BookingWithRelations = Booking & {
   artist?: Artist | null;
-  bookingRequest?: BookingRequest | null;
+  rawEmail?: RawEmail | null;
 };
 
 const BookingRef = builder.objectRef<BookingWithRelations>('Booking');
@@ -13,14 +36,23 @@ builder.objectType(BookingRef, {
   fields: (t) => ({
     id: t.exposeString('id'),
     promoter: t.exposeString('promoter', { nullable: true }),
+    promoterEmail: t.exposeString('promoterEmail', { nullable: true }),
     venue: t.exposeString('venue', { nullable: true }),
     city: t.exposeString('city', { nullable: true }),
     country: t.exposeString('country', { nullable: true }),
-    date: t.expose('date', { type: 'DateTime', nullable: true }),
+    proposedDate: t.expose('proposedDate', { type: 'DateTime', nullable: true }),
+    proposedDateRaw: t.exposeString('proposedDateRaw', { nullable: true }),
     feeAmount: t.exposeInt('feeAmount', { nullable: true }),
     currencyCode: t.exposeString('currencyCode', { nullable: true }),
+    rawFee: t.exposeString('rawFee', { nullable: true }),
     status: t.exposeString('status'),
+    confidence: t.exposeFloat('confidence', { nullable: true }),
+    missingFields: t.exposeStringList('missingFields'),
+    conflictFlags: t.exposeStringList('conflictFlags'),
+    summary: t.exposeString('summary', { nullable: true }),
     notes: t.exposeString('notes', { nullable: true }),
+    recommendedNextAction: t.exposeString('recommendedNextAction', { nullable: true }),
+    details: t.expose('details', { type: 'JSON', nullable: true }),
     createdAt: t.expose('createdAt', { type: 'DateTime' }),
     updatedAt: t.expose('updatedAt', { type: 'DateTime' }),
     artist: t.field({
@@ -28,12 +60,12 @@ builder.objectType(BookingRef, {
       nullable: true,
       resolve: (parent) => parent.artist ?? null,
     }),
-    bookingRequest: t.field({
-      type: BookingRequestRef,
+    rawEmail: t.field({
+      type: RawEmailRef,
       nullable: true,
-      resolve: (parent) => parent.bookingRequest ?? null,
+      resolve: (parent) => parent.rawEmail ?? null,
     }),
   }),
 });
 
-export { BookingRef };
+export { BookingRef, ArtistRef, RawEmailRef };

@@ -2,9 +2,9 @@ import { FunctionTool } from '@google/adk';
 import { db } from '@overbook/db';
 import { z } from 'zod';
 
-export const saveBookingRequestTool = new FunctionTool({
-  name: 'save_booking_request',
-  description: 'Persists a completed booking request to the database.',
+export const saveBookingTool = new FunctionTool({
+  name: 'save_booking',
+  description: 'Persists a completed booking to the database.',
   parameters: z.object({
     organization_id: z.string(),
     artist_id: z.string().nullable().describe('Matched artist ID from roster lookup'),
@@ -17,14 +17,13 @@ export const saveBookingRequestTool = new FunctionTool({
     fee_amount: z.number().nullable(),
     currency_code: z.string().nullable().describe('e.g. GBP, EUR, USD'),
     raw_fee: z.string().nullable().describe('Original fee text from email'),
-    status: z.string().default('PENDING_REVIEW'),
     missing_fields: z.array(z.string()),
     conflict_flags: z.array(z.string()),
     details: z.record(z.unknown()).optional().describe('Extra extracted fields'),
     raw_email_id: z.string().nullable().optional(),
   }),
   execute: async (params) => {
-    const request = await db.bookingRequest.create({
+    const booking = await db.booking.create({
       data: {
         organizationId: params.organization_id,
         artistId: params.artist_id,
@@ -42,34 +41,6 @@ export const saveBookingRequestTool = new FunctionTool({
         details: params.details ?? {},
         rawEmailId: params.raw_email_id ?? null,
       },
-    });
-
-    return { success: true, id: request.id };
-  },
-});
-
-export const createBookingTool = new FunctionTool({
-  name: 'create_booking',
-  description: 'Creates a new booking record from a captured booking request.',
-  parameters: z.object({
-    booking_request_id: z.string(),
-    artist_id: z.string(),
-    notes: z.string().optional(),
-  }),
-  execute: async ({ booking_request_id, artist_id, notes }) => {
-    const booking = await db.booking.create({
-      data: {
-        bookingRequestId: booking_request_id,
-        artistId: artist_id,
-        organizationId: (await db.bookingRequest.findUniqueOrThrow({ where: { id: booking_request_id } })).organizationId,
-        status: 'CAPTURED',
-        notes: notes ?? '',
-      },
-    });
-
-    await db.bookingRequest.update({
-      where: { id: booking_request_id },
-      data: { status: 'CAPTURED' },
     });
 
     return { success: true, id: booking.id };

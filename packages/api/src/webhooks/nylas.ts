@@ -88,11 +88,11 @@ export async function nylasWebhookHandler(req: Request, res: Response) {
     if (threadId) {
       const existingEmail = await db.rawEmail.findFirst({
         where: { threadId },
-        include: { bookingRequest: true },
+        include: { booking: true },
       });
-      if (existingEmail?.bookingRequest) {
+      if (existingEmail?.booking) {
         await saveRawEmail({ messageData, orgId, inboxId: inbox.id, nylasMessageId, threadId });
-        console.log('[nylas] Reply on thread %s → request %s', threadId, existingEmail.bookingRequest.id);
+        console.log('[nylas] Reply on thread %s → booking %s', threadId, existingEmail.booking.id);
         res.status(200).send('ok');
         return;
       }
@@ -171,11 +171,11 @@ async function processEmailAsync(
     }
 
     // Check if a BookingRequest was created
-    const newRequest = await db.bookingRequest.findFirst({
+    const newBooking = await db.booking.findFirst({
       where: { organizationId: orgId },
       orderBy: { createdAt: 'desc' },
     });
-    console.log('[nylas-pipeline] Latest BookingRequest: %s (status: %s)', newRequest?.id ?? 'NONE', newRequest?.status ?? '-');
+    console.log('[nylas-pipeline] Latest Booking: %s (status: %s)', newBooking?.id ?? 'NONE', newBooking?.status ?? '-');
 
   } catch (err) {
     console.error('[nylas-pipeline] ✗ Pipeline error:', err);

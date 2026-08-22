@@ -2,10 +2,10 @@
 CREATE TYPE "member_role" AS ENUM ('OWNER', 'ADMIN', 'AGENT', 'ASSISTANT');
 
 -- CreateEnum
-CREATE TYPE "booking_request_status" AS ENUM ('NEEDS_REVIEW', 'DISMISSED', 'INFO_REQUESTED', 'CAPTURED');
+CREATE TYPE "booking_source" AS ENUM ('EMAIL', 'MANUAL_PASTE', 'API');
 
 -- CreateEnum
-CREATE TYPE "booking_status" AS ENUM ('CAPTURED', 'AWAITING_REPLY', 'IN_NEGOTIATION', 'PENCILLED', 'AWAITING_ARTIST', 'AWAITING_PROMOTER', 'CONTRACT_REQUESTED', 'CONTRACT_RECEIVED', 'CONFIRMED', 'LOST');
+CREATE TYPE "booking_status" AS ENUM ('INBOX', 'NEEDS_REVIEW', 'PENCILLED', 'SENT_TO_ARTIST', 'APPROVED', 'CONFIRMED', 'CONTRACTED', 'DECLINED', 'LOST');
 
 -- CreateTable
 CREATE TABLE "organizations" (
@@ -75,13 +75,16 @@ CREATE TABLE "connected_inboxes" (
 CREATE TABLE "raw_emails" (
     "id" TEXT NOT NULL,
     "organization_id" TEXT NOT NULL,
-    "connected_inbox_id" TEXT NOT NULL,
-    "nylas_message_id" TEXT NOT NULL,
+    "connected_inbox_id" TEXT,
+    "nylas_message_id" TEXT,
+    "thread_id" TEXT,
     "subject" TEXT,
     "body_text" TEXT NOT NULL,
     "body_html" TEXT,
     "from_email" TEXT,
     "from_name" TEXT,
+    "to_email" TEXT,
+    "to_name" TEXT,
     "received_at" TIMESTAMP(3) NOT NULL,
     "has_attachments" BOOLEAN NOT NULL DEFAULT false,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -90,7 +93,7 @@ CREATE TABLE "raw_emails" (
 );
 
 -- CreateTable
-CREATE TABLE "booking_requests" (
+CREATE TABLE "bookings" (
     "id" TEXT NOT NULL,
     "organization_id" TEXT NOT NULL,
     "artist_id" TEXT,
@@ -112,37 +115,15 @@ CREATE TABLE "booking_requests" (
     "currency_symbol" TEXT,
     "raw_fee" TEXT,
     "agency_fee_on_top" BOOLEAN,
+    "source" "booking_source" NOT NULL DEFAULT 'API',
     "details" JSONB,
-    "status" "booking_request_status" NOT NULL DEFAULT 'NEEDS_REVIEW',
+    "status" "booking_status" NOT NULL DEFAULT 'INBOX',
     "confidence" DOUBLE PRECISION,
     "missing_fields" TEXT[],
     "conflict_flags" TEXT[],
     "summary" TEXT,
     "notes" TEXT,
     "recommended_next_action" TEXT,
-    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updated_at" TIMESTAMP(3) NOT NULL,
-
-    CONSTRAINT "booking_requests_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "bookings" (
-    "id" TEXT NOT NULL,
-    "organization_id" TEXT NOT NULL,
-    "artist_id" TEXT NOT NULL,
-    "booking_request_id" TEXT NOT NULL,
-    "promoter" TEXT,
-    "venue" TEXT,
-    "city" TEXT,
-    "country" TEXT,
-    "date" TIMESTAMP(3),
-    "fee_amount" INTEGER,
-    "currency_code" TEXT,
-    "currency_symbol" TEXT,
-    "agency_fee_on_top" BOOLEAN,
-    "status" "booking_status" NOT NULL DEFAULT 'CAPTURED',
-    "notes" TEXT,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
 
@@ -183,19 +164,10 @@ CREATE INDEX "raw_emails_organization_id_idx" ON "raw_emails"("organization_id")
 CREATE INDEX "raw_emails_connected_inbox_id_idx" ON "raw_emails"("connected_inbox_id");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "booking_requests_raw_email_id_key" ON "booking_requests"("raw_email_id");
+CREATE INDEX "raw_emails_thread_id_idx" ON "raw_emails"("thread_id");
 
 -- CreateIndex
-CREATE INDEX "booking_requests_organization_id_idx" ON "booking_requests"("organization_id");
-
--- CreateIndex
-CREATE INDEX "booking_requests_artist_id_idx" ON "booking_requests"("artist_id");
-
--- CreateIndex
-CREATE INDEX "booking_requests_status_idx" ON "booking_requests"("status");
-
--- CreateIndex
-CREATE UNIQUE INDEX "bookings_booking_request_id_key" ON "bookings"("booking_request_id");
+CREATE UNIQUE INDEX "bookings_raw_email_id_key" ON "bookings"("raw_email_id");
 
 -- CreateIndex
 CREATE INDEX "bookings_organization_id_idx" ON "bookings"("organization_id");
@@ -228,28 +200,19 @@ ALTER TABLE "connected_inboxes" ADD CONSTRAINT "connected_inboxes_user_id_fkey" 
 ALTER TABLE "raw_emails" ADD CONSTRAINT "raw_emails_organization_id_fkey" FOREIGN KEY ("organization_id") REFERENCES "organizations"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "raw_emails" ADD CONSTRAINT "raw_emails_connected_inbox_id_fkey" FOREIGN KEY ("connected_inbox_id") REFERENCES "connected_inboxes"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "booking_requests" ADD CONSTRAINT "booking_requests_organization_id_fkey" FOREIGN KEY ("organization_id") REFERENCES "organizations"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "booking_requests" ADD CONSTRAINT "booking_requests_artist_id_fkey" FOREIGN KEY ("artist_id") REFERENCES "artists"("id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "booking_requests" ADD CONSTRAINT "booking_requests_raw_email_id_fkey" FOREIGN KEY ("raw_email_id") REFERENCES "raw_emails"("id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "booking_requests" ADD CONSTRAINT "booking_requests_forwarded_by_id_fkey" FOREIGN KEY ("forwarded_by_id") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "booking_requests" ADD CONSTRAINT "booking_requests_assigned_to_id_fkey" FOREIGN KEY ("assigned_to_id") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "raw_emails" ADD CONSTRAINT "raw_emails_connected_inbox_id_fkey" FOREIGN KEY ("connected_inbox_id") REFERENCES "connected_inboxes"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "bookings" ADD CONSTRAINT "bookings_organization_id_fkey" FOREIGN KEY ("organization_id") REFERENCES "organizations"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "bookings" ADD CONSTRAINT "bookings_artist_id_fkey" FOREIGN KEY ("artist_id") REFERENCES "artists"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "bookings" ADD CONSTRAINT "bookings_artist_id_fkey" FOREIGN KEY ("artist_id") REFERENCES "artists"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "bookings" ADD CONSTRAINT "bookings_booking_request_id_fkey" FOREIGN KEY ("booking_request_id") REFERENCES "booking_requests"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "bookings" ADD CONSTRAINT "bookings_raw_email_id_fkey" FOREIGN KEY ("raw_email_id") REFERENCES "raw_emails"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "bookings" ADD CONSTRAINT "bookings_forwarded_by_id_fkey" FOREIGN KEY ("forwarded_by_id") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "bookings" ADD CONSTRAINT "bookings_assigned_to_id_fkey" FOREIGN KEY ("assigned_to_id") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;

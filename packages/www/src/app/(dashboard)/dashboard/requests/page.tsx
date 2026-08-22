@@ -6,9 +6,9 @@ import { useState } from "react";
 import { RequestDetail } from "./_components/request-detail";
 import { RequestQueue } from "./_components/request-queue";
 
-const BOOKING_REQUESTS = gql`
-  query BookingRequests {
-    bookingRequests {
+const BOOKINGS = gql`
+  query Bookings {
+    bookings {
       id
       promoter
       promoterEmail
@@ -45,35 +45,24 @@ const BOOKING_REQUESTS = gql`
   }
 `;
 
-const DISMISS = gql`
-  mutation Dismiss($id: String!) {
-    dismissBookingRequest(id: $id) {
+const UPDATE_STATUS = gql`
+  mutation UpdateBookingStatus($id: String!, $status: BookingStatus!) {
+    updateBookingStatus(id: $id, status: $status) {
       id
       status
     }
   }
 `;
 
-const CREATE_BOOKING = gql`
-  mutation CreateBooking($bookingRequestId: String!) {
-    createBooking(bookingRequestId: $bookingRequestId) {
-      id
-    }
-  }
-`;
-
 export default function RequestsPage() {
-  const { data, loading, refetch } = useQuery(BOOKING_REQUESTS, {
+  const { data, loading, refetch } = useQuery(BOOKINGS, {
     pollInterval: 30000,
   });
-  const [dismiss] = useMutation(DISMISS, { onCompleted: () => refetch() });
-  const [createBooking] = useMutation(CREATE_BOOKING, {
-    onCompleted: () => refetch(),
-  });
+  const [updateStatus] = useMutation(UPDATE_STATUS, { onCompleted: () => refetch() });
 
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
-  const requests = data?.bookingRequests ?? [];
+  const requests = data?.bookings ?? [];
   const selectedRequest = requests.find(
     (r: { id: string }) => r.id === selectedId
   );
@@ -96,12 +85,8 @@ export default function RequestsPage() {
           {selectedRequest ? (
             <RequestDetail
               request={selectedRequest}
-              onDismiss={() => dismiss({ variables: { id: selectedRequest.id } })}
-              onCreateBooking={() =>
-                createBooking({
-                  variables: { bookingRequestId: selectedRequest.id },
-                })
-              }
+              onDismiss={() => updateStatus({ variables: { id: selectedRequest.id, status: 'DECLINED' } })}
+              onCreateBooking={() => updateStatus({ variables: { id: selectedRequest.id, status: 'PENCILLED' } })}
             />
           ) : (
             <div className="flex h-full items-center justify-center">
