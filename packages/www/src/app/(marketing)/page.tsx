@@ -13,7 +13,7 @@ export default function HomePage() {
         <h1 className="mb-6 max-w-[700px] text-[clamp(2rem,4vw,3.5rem)] font-medium leading-[1.1] tracking-tight">
           Manage every booking,
           <br />
-          <span className="text-muted">offer to settlement.</span>
+          <span className="text-muted-foreground">offer to settlement.</span>
         </h1>
         <p className="mb-10 max-w-[38rem] text-[clamp(1.05rem,1.5vw,1.35rem)] leading-relaxed">
           Overbook empowers music booking agencies to move at the speed of AI —

@@ -19,7 +19,7 @@ export function DemoForm() {
         placeholder="you@agency.com"
         value={email}
         onChange={(e) => setEmail(e.target.value)}
-        className="flex-1 rounded-lg border border-ink/15 bg-white px-5 py-3 text-base text-ink shadow-sm placeholder:text-muted focus:outline-none"
+        className="flex-1 rounded-lg border border-ink/15 bg-white px-5 py-3 text-base text-ink shadow-sm placeholder:text-muted-foreground focus:outline-none"
       />
       <button
         type="submit"
